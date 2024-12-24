@@ -1,6 +1,6 @@
 # Pacman C++
 
-An implemention of Pacman in C++ using SFML.
+An implementation of Pacman in C++ using SFML.
 
 Most likely this will not be of use to anyone.
 
