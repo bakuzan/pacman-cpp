@@ -1,0 +1,4 @@
+# Build
+*.exe
+*.dll
+!dlls/*.dll
