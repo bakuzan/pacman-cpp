@@ -5,13 +5,15 @@
 #include <sstream>
 #include <vector>
 
-#include "include/Enums.h"
+#include "include/CellType.h"
+#include "include/Player.h"
 #include "include/Wall.h"
 
 static const float WINDOW_SIZE = 512.0f;
 static const float GRID_OFFSET_Y = 1.0f;
 static const float GRID_WIDTH = 29.0f;
 static const float GRID_HEIGHT = 31.0f + GRID_OFFSET_Y;
+static const float SPRITE_SIZE = 1.0f;
 
 std::vector<Wall> walls;
 
@@ -22,7 +24,7 @@ void writeToLogFile(const std::string &message)
     logFile.close();
 }
 
-void ReadAndProcessMap()
+void ReadAndProcessMap(Player &player)
 {
     std::ifstream file("./resources/map.txt");
     if (!file.is_open())
@@ -57,6 +59,11 @@ void ReadAndProcessMap()
                 walls.push_back({CellType::GHOST_DOOR, x, y});
                 break;
             }
+            case CellType::PACMAN_START_POSITION:
+            {
+                player.SetPosition(x, y);
+                break;
+            }
             case CellType::NOTHING:
             default:
                 break;
@@ -78,12 +85,36 @@ int main()
     sf::View view(sf::Vector2f(0.0f, 0.0f), sf::Vector2f(GRID_WIDTH, GRID_HEIGHT));
     view.setCenter(GRID_WIDTH / 2, GRID_HEIGHT / 2);
 
-    ReadAndProcessMap();
+    // Load spritesheet
+    sf::Image spritesheet;
+    if (!spritesheet.loadFromFile("./resources/spritesheet.png"))
+    {
+        writeToLogFile("Error opening file ./resources/spritesheet.png");
+        exit(EXIT_FAILURE);
+    }
+
+    // Set colour that will be treated as transparent!
+    sf::Color transparentColor = spritesheet.getPixel(0, 0);
+    spritesheet.createMaskFromColor(transparentColor);
+
+    // Create player
+    Player player = Player(spritesheet, SPRITE_SIZE);
+
+    // Process map
+    ReadAndProcessMap(player);
+
+    float deltaTime = 0.0f;
+    sf::Clock clock;
 
     while (window.isOpen())
     {
         // Timing
-        // ???
+        deltaTime = clock.restart().asSeconds();
+        float fpsLimit = 1.0f / 20.0f; // Lock fps
+        if (deltaTime > fpsLimit)
+        {
+            deltaTime = fpsLimit;
+        }
 
         // Input
         sf::Event evnt;
@@ -106,11 +137,13 @@ int main()
         }
 
         // Logic
-        // ???
+        player.Update(deltaTime);
 
         // Draw+Display
         window.clear(sf::Color(31, 31, 31));
         window.setView(view);
+
+        player.Draw(window);
 
         for (auto &wall : walls)
         {
@@ -122,6 +155,7 @@ int main()
             case CellType::WALL:
             {
                 shape.setSize(sf::Vector2f(0.5f, 0.5f));
+                shape.setOrigin(shape.getSize().x / 2.0f, shape.getSize().y / 2.0f);
                 shape.setFillColor(sf::Color::Transparent);
                 shape.setOutlineColor(sf::Color(33, 33, 222));
                 shape.setOutlineThickness(0.20f);
@@ -130,9 +164,10 @@ int main()
             }
             case CellType::GHOST_DOOR:
             {
-                shape.setSize(sf::Vector2f(1.25f, 0.5f));
+                shape.setSize(sf::Vector2f(1.20f, 0.75f));
+                shape.setOrigin(shape.getSize().x / 2.0f, shape.getSize().y / 2.0f);
                 shape.setFillColor(sf::Color(100, 41, 71));
-                shape.setPosition(wall.x - 0.25f, wall.y + 0.25f);
+                shape.setPosition(wall.x + 0.05f, wall.y + 0.15f);
                 break;
             }
             }

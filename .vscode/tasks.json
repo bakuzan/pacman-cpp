@@ -8,6 +8,7 @@
         "-fdiagnostics-color=always",
         "-g",
         "${file}",
+        "${workspaceFolder}\\Player.cpp",
         "-o",
         "${fileDirname}\\${fileBasenameNoExtension}.exe",
         "-I${workspaceFolder}\\include",

@@ -1,4 +1,4 @@
-#include "Enums.h"
+#include "CellType.h"
 
 struct Wall
 {
