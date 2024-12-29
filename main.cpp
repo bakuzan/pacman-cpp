@@ -2,23 +2,16 @@
 
 #include <cstdlib>
 #include <fstream>
-#include <iostream>
 #include <sstream>
-#include <string>
 #include <vector>
 
 #include "include/Enums.h"
-
-struct Wall
-{
-    CellType type;
-    float x;
-    float y;
-};
+#include "include/Wall.h"
 
 static const float WINDOW_SIZE = 512.0f;
+static const float GRID_OFFSET_Y = 1.0f;
 static const float GRID_WIDTH = 29.0f;
-static const float GRID_HEIGHT = 31.0f;
+static const float GRID_HEIGHT = 31.0f + GRID_OFFSET_Y;
 
 std::vector<Wall> walls;
 
@@ -50,7 +43,7 @@ void ReadAndProcessMap()
         {
             int cellContents = std::stoi(number);
             float x = float(numberIndex);
-            float y = float(lineIndex);
+            float y = float(lineIndex) + GRID_OFFSET_Y;
 
             switch (cellContents)
             {
@@ -86,12 +79,6 @@ int main()
     view.setCenter(GRID_WIDTH / 2, GRID_HEIGHT / 2);
 
     ReadAndProcessMap();
-    for (auto &wall : walls)
-    {
-        std::cout << std::to_string(wall.type)
-                  << "(" << std::to_string(wall.x) << "," << std::to_string(wall.y) << ")"
-                  << std::endl;
-    }
 
     while (window.isOpen())
     {
@@ -137,7 +124,7 @@ int main()
                 shape.setSize(sf::Vector2f(0.5f, 0.5f));
                 shape.setFillColor(sf::Color::Transparent);
                 shape.setOutlineColor(sf::Color(33, 33, 222));
-                shape.setOutlineThickness(0.25f);
+                shape.setOutlineThickness(0.20f);
                 shape.setPosition(wall.x, wall.y);
                 break;
             }
