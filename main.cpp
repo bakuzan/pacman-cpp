@@ -97,11 +97,31 @@ int main()
     sf::Color transparentColor = spritesheet.getPixel(0, 0);
     spritesheet.createMaskFromColor(transparentColor);
 
+    // Load font for display text
+    sf::Font font;
+    if (!font.loadFromFile("./resources/PressStart2P-Regular.ttf"))
+    {
+        writeToLogFile("Error loading font");
+        exit(EXIT_FAILURE);
+    }
+
+    sf::Text readyText;
+    readyText.setFont(font);
+    readyText.setString("READY!");
+    readyText.setCharacterSize(5);
+    readyText.setFillColor(sf::Color::Yellow);
+    readyText.setPosition(static_cast<int>(11 * SPRITE_SIZE), static_cast<int>(19 * SPRITE_SIZE));
+
     // Create player
     Player player = Player(spritesheet, SPRITE_SIZE);
 
     // Process map
     ReadAndProcessMap(player);
+
+    // Game state
+    bool isPreGame = true;
+    float displayDuration = 3.0f;
+    sf::Clock readyClock;
 
     float deltaTime = 0.0f;
     sf::Clock clock;
@@ -137,11 +157,25 @@ int main()
         }
 
         // Logic
-        player.Update(deltaTime);
+        if (!isPreGame)
+        {
+            player.Update(deltaTime);
+        }
 
         // Draw+Display
         window.clear(sf::Color(31, 31, 31));
         window.setView(view);
+
+        if (isPreGame)
+        {
+            window.draw(readyText);
+
+            if (readyClock.getElapsedTime().asSeconds() >= displayDuration)
+            {
+                isPreGame = false;
+                player.SetDirection(Direction::LEFT);
+            }
+        }
 
         player.Draw(window);
 

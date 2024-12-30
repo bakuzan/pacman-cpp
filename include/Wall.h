@@ -1,3 +1,5 @@
+#pragma once
+
 #include "CellType.h"
 
 struct Wall

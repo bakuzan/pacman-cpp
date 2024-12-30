@@ -4,13 +4,13 @@
 #include "include/Player.h"
 
 Player::Player(sf::Image &spritesheet, float spriteSize)
+    : animation(&texture, 0.1f)
 {
-    this->direction = Direction::LEFT;
+    this->direction = Direction::NONE;
 
-    sf::Texture pacmanTexture;
-    pacmanTexture.loadFromImage(spritesheet);
+    texture.loadFromImage(spritesheet);
 
-    sprite.setTexture(pacmanTexture);
+    sprite.setTexture(texture);
     sprite.setTextureRect(sf::IntRect(128, 0, 32, 32));
 
     sf::FloatRect bounds = sprite.getLocalBounds();
@@ -73,8 +73,14 @@ void Player::Update(float deltaTime)
         break;
     }
 
-    // TODO update sprite so is animated
+    animation.Update(direction, deltaTime);
+    sprite.setTextureRect(animation.textureRect);
     sprite.move(velocity * deltaTime);
+}
+
+void Player::SetDirection(Direction newDirection)
+{
+    direction = newDirection;
 }
 
 void Player::SetPosition(float x, float y)
