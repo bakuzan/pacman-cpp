@@ -159,7 +159,7 @@ int main()
         // Logic
         if (!isPreGame)
         {
-            player.Update(deltaTime);
+            player.Update(deltaTime, walls);
         }
 
         // Draw+Display
@@ -182,7 +182,6 @@ int main()
         for (auto &wall : walls)
         {
             sf::RectangleShape shape;
-            float offsetY = 0.0f;
 
             switch (wall.type)
             {
@@ -198,10 +197,10 @@ int main()
             }
             case CellType::GHOST_DOOR:
             {
-                shape.setSize(sf::Vector2f(1.20f, 0.75f));
+                shape.setSize(sf::Vector2f(1.0f, 1.0f));
                 shape.setOrigin(shape.getSize().x / 2.0f, shape.getSize().y / 2.0f);
                 shape.setFillColor(sf::Color(100, 41, 71));
-                shape.setPosition(wall.x + 0.05f, wall.y + 0.15f);
+                shape.setPosition(wall.x, wall.y);
                 break;
             }
             }

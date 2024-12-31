@@ -1,7 +1,9 @@
 #include <SFML/Graphics.hpp>
 
+#include "include/CellType.h"
 #include "include/Direction.h"
 #include "include/Player.h"
+#include "include/Wall.h"
 
 Player::Player(sf::Image &spritesheet, float spriteSize)
     : animation(&texture, 0.1f)
@@ -28,33 +30,34 @@ Player::~Player()
     // Destructor
 }
 
-void Player::Update(float deltaTime)
+void Player::Update(float deltaTime, const std::vector<Wall> &walls)
 {
+    Direction newDirection = this->direction;
     float speed = 5.0f;
     velocity.x = 0.0f;
     velocity.y = 0.0f;
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
     {
-        direction = Direction::LEFT;
+        newDirection = Direction::LEFT;
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
     {
-        direction = Direction::RIGHT;
+        newDirection = Direction::RIGHT;
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
     {
-        direction = Direction::UP;
+        newDirection = Direction::UP;
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
     {
-        direction = Direction::DOWN;
+        newDirection = Direction::DOWN;
     }
 
-    switch (direction)
+    switch (newDirection)
     {
     case Direction::LEFT:
         velocity.x -= speed;
@@ -73,9 +76,20 @@ void Player::Update(float deltaTime)
         break;
     }
 
-    animation.Update(direction, deltaTime);
-    sprite.setTextureRect(animation.textureRect);
-    sprite.move(velocity * deltaTime);
+    sf::Vector2f position = sprite.getPosition();
+    sf::Vector2f newPosition = position + velocity * deltaTime;
+
+    if (!CheckTileCollision(newPosition, walls))
+    {
+        this->direction = newDirection;
+        animation.Update(direction, deltaTime);
+        sprite.setTextureRect(animation.textureRect);
+        sprite.move(velocity * deltaTime);
+    }
+    else if (direction == newDirection)
+    {
+        this->direction = Direction::NONE;
+    }
 }
 
 void Player::SetDirection(Direction newDirection)
