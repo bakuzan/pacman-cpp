@@ -15,7 +15,7 @@ static const float GRID_WIDTH = 29.0f;
 static const float GRID_HEIGHT = 31.0f + GRID_OFFSET_Y;
 static const float SPRITE_SIZE = 1.0f;
 
-std::vector<Wall> walls;
+std::vector<sf::RectangleShape> walls;
 
 void writeToLogFile(const std::string &message)
 {
@@ -51,12 +51,24 @@ void ReadAndProcessMap(Player &player)
             {
             case CellType::WALL:
             {
-                walls.push_back({CellType::WALL, x, y});
+                sf::RectangleShape wall;
+                wall.setSize(sf::Vector2f(0.6f, 0.6f));
+                wall.setOrigin(wall.getSize().x / 2.0f, wall.getSize().y / 2.0f);
+                wall.setFillColor(sf::Color::Transparent);
+                wall.setOutlineColor(sf::Color(33, 33, 222));
+                wall.setOutlineThickness(0.20f);
+                wall.setPosition(x, y);
+                walls.push_back(wall);
                 break;
             }
             case CellType::GHOST_DOOR:
             {
-                walls.push_back({CellType::GHOST_DOOR, x, y});
+                sf::RectangleShape ghostDoor;
+                ghostDoor.setSize(sf::Vector2f(1.0f, 1.0f));
+                ghostDoor.setOrigin(ghostDoor.getSize().x / 2.0f, ghostDoor.getSize().y / 2.0f);
+                ghostDoor.setFillColor(sf::Color(100, 41, 71));
+                ghostDoor.setPosition(x, y);
+                walls.push_back(ghostDoor);
                 break;
             }
             case CellType::PACMAN_START_POSITION:
@@ -181,31 +193,7 @@ int main()
 
         for (auto &wall : walls)
         {
-            sf::RectangleShape shape;
-
-            switch (wall.type)
-            {
-            case CellType::WALL:
-            {
-                shape.setSize(sf::Vector2f(0.5f, 0.5f));
-                shape.setOrigin(shape.getSize().x / 2.0f, shape.getSize().y / 2.0f);
-                shape.setFillColor(sf::Color::Transparent);
-                shape.setOutlineColor(sf::Color(33, 33, 222));
-                shape.setOutlineThickness(0.20f);
-                shape.setPosition(wall.x, wall.y);
-                break;
-            }
-            case CellType::GHOST_DOOR:
-            {
-                shape.setSize(sf::Vector2f(1.0f, 1.0f));
-                shape.setOrigin(shape.getSize().x / 2.0f, shape.getSize().y / 2.0f);
-                shape.setFillColor(sf::Color(100, 41, 71));
-                shape.setPosition(wall.x, wall.y);
-                break;
-            }
-            }
-
-            window.draw(shape);
+            window.draw(wall);
         }
 
         // Display new window
