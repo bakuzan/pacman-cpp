@@ -2,7 +2,7 @@
 
 #include "CellType.h"
 
-struct Wall
+struct PickUp
 {
     CellType type;
     float x;

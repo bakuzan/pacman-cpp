@@ -3,7 +3,6 @@
 #include "include/CellType.h"
 #include "include/Direction.h"
 #include "include/Player.h"
-#include "include/Wall.h"
 
 Player::Player(sf::Image &spritesheet, float spriteSize)
     : animation(&texture, 0.1f)

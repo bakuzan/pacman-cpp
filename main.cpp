@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 
+#include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
@@ -7,7 +8,7 @@
 
 #include "include/CellType.h"
 #include "include/Player.h"
-#include "include/Wall.h"
+#include "include/PickUp.h"
 
 static const float WINDOW_SIZE = 512.0f;
 static const float GRID_OFFSET_Y = 1.0f;
@@ -16,6 +17,7 @@ static const float GRID_HEIGHT = 31.0f + GRID_OFFSET_Y;
 static const float SPRITE_SIZE = 1.0f;
 
 std::vector<sf::RectangleShape> walls;
+std::vector<PickUp> pickUps;
 
 void writeToLogFile(const std::string &message)
 {
@@ -69,6 +71,16 @@ void ReadAndProcessMap(Player &player)
                 ghostDoor.setFillColor(sf::Color(100, 41, 71));
                 ghostDoor.setPosition(x, y);
                 walls.push_back(ghostDoor);
+                break;
+            }
+            case CellType::PELLET:
+            {
+                pickUps.push_back({CellType::PELLET, x, y});
+                break;
+            }
+            case CellType::POWER_UP:
+            {
+                pickUps.push_back({CellType::POWER_UP, x, y});
                 break;
             }
             case CellType::PACMAN_START_POSITION:
@@ -172,6 +184,22 @@ int main()
         if (!isPreGame)
         {
             player.Update(deltaTime, walls);
+
+            // Eat pellets?
+            sf::Vector2f playerPos = player.GetPosition();
+            int playerX = static_cast<int>(playerPos.x);
+            int playerY = static_cast<int>(playerPos.y);
+            pickUps.erase(std::remove_if(pickUps.begin(), pickUps.end(),
+                                         [&playerX, &playerY](const auto &pu)
+                                         {
+                                             if (playerX == pu.x &&
+                                                 playerY == pu.y)
+                                             {
+                                                 return true;
+                                             }
+                                             return false;
+                                         }),
+                          pickUps.end());
         }
 
         // Draw+Display
@@ -194,6 +222,19 @@ int main()
         for (auto &wall : walls)
         {
             window.draw(wall);
+        }
+
+        for (auto &pu : pickUps)
+        {
+            float size = pu.type == CellType::POWER_UP
+                             ? 0.4
+                             : 0.1;
+
+            sf::CircleShape cs(size);
+            cs.setOrigin(size, size);
+            cs.setFillColor(sf::Color::White);
+            cs.setPosition(pu.x, pu.y);
+            window.draw(cs);
         }
 
         // Display new window
