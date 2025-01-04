@@ -29,9 +29,10 @@ private:
 private:
     bool CheckTileCollision(sf::Sprite player, const std::vector<sf::RectangleShape> &walls)
     {
+        sf::FloatRect playerBounds = player.getGlobalBounds();
         for (const auto &wall : walls)
         {
-            if (player.getGlobalBounds().intersects(wall.getGlobalBounds()))
+            if (playerBounds.intersects(wall.getGlobalBounds()))
             {
                 return true;
             }

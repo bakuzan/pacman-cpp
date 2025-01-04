@@ -20,8 +20,8 @@ Player::Player(sf::Image &spritesheet, float spriteSize)
     float centreY = bounds.height / 2.0f;
     sprite.setOrigin(centreX, centreY);
 
-    float scaleX = (spriteSize * 0.95f) / bounds.width;
-    float scaleY = (spriteSize * 0.95f) / bounds.height;
+    float scaleX = spriteSize / bounds.width;
+    float scaleY = spriteSize / bounds.height;
     sprite.setScale(scaleX, scaleY);
 }
 
@@ -61,8 +61,12 @@ void Player::Update(float deltaTime, const std::vector<sf::RectangleShape> &wall
         direction != newDirection &&
         direction != Direction::NONE)
     {
-        newDirection = this->direction; // Put newDirection back to current direction;
-        canMove = CanMove(newDirection, deltaTime, walls);
+        canMove = CanMove(this->direction, deltaTime, walls);
+        if (canMove)
+        {
+            // Make newDirection equal to current direction if that movement is good.
+            newDirection = this->direction;
+        }
     }
 
     if (canMove)
