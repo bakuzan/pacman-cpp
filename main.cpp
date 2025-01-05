@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
@@ -132,9 +133,10 @@ int main()
     sf::Text readyText;
     readyText.setFont(font);
     readyText.setString("READY!");
+    readyText.setCharacterSize(20);
     readyText.setScale(1.0f / 30.0f, 1.0f / 30.0f);
     readyText.setFillColor(sf::Color::Yellow);
-    readyText.setPosition(11, 18);
+    readyText.setPosition(11.5f, 17.75f);
 
     // Create player
     Player player = Player(spritesheet, SPRITE_SIZE);
@@ -187,8 +189,8 @@ int main()
 
             // Eat pellets?
             sf::Vector2f playerPos = player.GetPosition();
-            int playerX = static_cast<int>(playerPos.x);
-            int playerY = static_cast<int>(playerPos.y);
+            int playerX = static_cast<int>(std::round(playerPos.x));
+            int playerY = static_cast<int>(std::round(playerPos.y));
             pickUps.erase(std::remove_if(pickUps.begin(), pickUps.end(),
                                          [&playerX, &playerY](const auto &pu)
                                          {

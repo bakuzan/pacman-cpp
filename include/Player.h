@@ -31,7 +31,7 @@ private:
 private:
     bool CheckTileCollision(sf::Sprite player, const std::vector<sf::RectangleShape> &walls)
     {
-        float tolerance = 0.1f;
+        float tolerance = 0.05f;
         sf::FloatRect playerBounds = player.getGlobalBounds();
         sf::FloatRect intersection;
 
