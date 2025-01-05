@@ -31,6 +31,7 @@ private:
 private:
     bool CheckTileCollision(sf::Sprite player, const std::vector<sf::RectangleShape> &walls)
     {
+        float tolerance = 0.1f;
         sf::FloatRect playerBounds = player.getGlobalBounds();
         sf::FloatRect intersection;
 
@@ -41,9 +42,20 @@ private:
             // Check if the player bounds intersect with any wall
             if (playerBounds.intersects(wallBounds, intersection))
             {
+                if (intersection.width < tolerance &&
+                    intersection.height < tolerance)
+                {
+                    continue;
+                }
+
                 // Use the intersection to determine which side is blocking
                 if (intersection.width < intersection.height)
                 {
+                    std::cout << "Intersection wxh: "
+                              << intersection.width
+                              << "x"
+                              << intersection.height
+                              << "\n";
                     // Horizontal collision
                     if (velocity.x > 0)
                     {
