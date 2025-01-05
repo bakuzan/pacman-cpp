@@ -31,47 +31,45 @@ private:
 private:
     bool CheckTileCollision(sf::Sprite player, const std::vector<sf::RectangleShape> &walls)
     {
-        sf::Vector2f playerPosition = player.getPosition();
-        sf::Vector2f playerScale = player.getScale();
-        sf::FloatRect playerSize = player.getLocalBounds();
-        sf::Vector2f playerHalfSize = sf::Vector2f(0.5f * playerSize.width * playerScale.x, 0.5f * playerSize.height * playerScale.y);
+        sf::FloatRect playerBounds = player.getGlobalBounds();
+        sf::FloatRect intersection;
 
-        // No need to round the player position as we're using exact floats
-        float playerMinX = playerPosition.x - playerHalfSize.x;
-        float playerMaxX = playerPosition.x + playerHalfSize.x;
-        float playerMinY = playerPosition.y - playerHalfSize.y;
-        float playerMaxY = playerPosition.y + playerHalfSize.y;
-
-        for (const auto &other : walls)
+        for (const auto &wall : walls)
         {
-            sf::Vector2f otherPosition = other.getPosition();
-            sf::Vector2f otherHalfSize = sf::Vector2f(0.5f, 0.5f);
+            sf::FloatRect wallBounds = wall.getGlobalBounds();
 
-            float otherMinX = otherPosition.x - otherHalfSize.x;
-            float otherMaxX = otherPosition.x + otherHalfSize.x;
-            float otherMinY = otherPosition.y - otherHalfSize.y;
-            float otherMaxY = otherPosition.y + otherHalfSize.y;
-
-            bool collisionX = playerMaxX > otherMinX && playerMinX < otherMaxX;
-            bool collisionY = playerMaxY > otherMinY && playerMinY < otherMaxY;
-
-            if (collisionX && collisionY)
+            // Check if the player bounds intersect with any wall
+            if (playerBounds.intersects(wallBounds, intersection))
             {
-                std::cout << "Player ("
-                          << playerPosition.x << ", "
-                          << playerPosition.y << ")\n";
-                std::cout << "Checking collision with wall at position ("
-                          << otherPosition.x << ", "
-                          << otherPosition.y << ")\n";
-                std::cout << "Player bounds X: [" << playerMinX << ", " << playerMaxX << "]\n";
-                std::cout << "Player bounds Y: [" << playerMinY << ", " << playerMaxY << "]\n";
-                std::cout << "Wall bounds X: [" << otherMinX << ", " << otherMaxX << "]\n";
-                std::cout << "Wall bounds Y: [" << otherMinY << ", " << otherMaxY << "]\n";
-                std::cout << "Collision detected with wall at position ("
-                          << otherPosition.x << ", "
-                          << otherPosition.y << ")\n";
-                std::cout << std::endl;
-                return true;
+                // Use the intersection to determine which side is blocking
+                if (intersection.width < intersection.height)
+                {
+                    // Horizontal collision
+                    if (velocity.x > 0)
+                    {
+                        std::cout << "Horizontal collision on the right\n";
+                        return true;
+                    }
+                    else if (velocity.x < 0)
+                    {
+                        std::cout << "Horizontal collision on the left\n";
+                        return true;
+                    }
+                }
+                else
+                {
+                    // Vertical collision
+                    if (velocity.y > 0)
+                    {
+                        std::cout << "Vertical collision below\n";
+                        return true;
+                    }
+                    else if (velocity.y < 0)
+                    {
+                        std::cout << "Vertical collision above\n";
+                        return true;
+                    }
+                }
             }
         }
 

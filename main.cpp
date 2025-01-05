@@ -132,9 +132,9 @@ int main()
     sf::Text readyText;
     readyText.setFont(font);
     readyText.setString("READY!");
-    readyText.setCharacterSize(5);
+    readyText.setScale(1.0f / 30.0f, 1.0f / 30.0f);
     readyText.setFillColor(sf::Color::Yellow);
-    readyText.setPosition(static_cast<int>(11 * SPRITE_SIZE), static_cast<int>(19 * SPRITE_SIZE));
+    readyText.setPosition(11, 18);
 
     // Create player
     Player player = Player(spritesheet, SPRITE_SIZE);
