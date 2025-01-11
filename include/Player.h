@@ -2,7 +2,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "Animation.h"
+#include "PlayerAnimation.h"
 #include "Direction.h"
 
 #ifndef PLAYER_H
@@ -11,7 +11,7 @@
 class Player
 {
 public:
-    Player(sf::Image &spritesheet, float spriteSize);
+    Player(sf::Texture &sharedTexture, float spriteSize);
     ~Player();
 
     sf::Vector2f GetPosition() { return sprite.getPosition(); };
@@ -22,11 +22,11 @@ public:
     void Update(Direction newDirection, float deltaTime, const std::vector<sf::RectangleShape> &walls, float minX, float maxX);
 
 private:
-    sf::Texture texture;
+    sf::Texture &texture;
     sf::Sprite sprite;
     sf::Vector2f velocity;
     Direction direction;
-    Animation animation;
+    PlayerAnimation animation;
 
 private:
     bool CheckTileCollision(sf::Sprite player, const std::vector<sf::RectangleShape> &walls, sf::Vector2f &collisionOffset)

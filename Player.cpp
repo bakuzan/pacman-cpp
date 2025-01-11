@@ -4,14 +4,12 @@
 #include "include/Direction.h"
 #include "include/Player.h"
 
-Player::Player(sf::Image &spritesheet, float spriteSize)
-    : animation(&texture, 0.1f)
+Player::Player(sf::Texture &sharedTexture, float spriteSize)
+    : texture(sharedTexture), animation(&sharedTexture, 0.1f)
 {
     this->direction = Direction::NONE;
 
-    texture.loadFromImage(spritesheet);
-
-    sprite.setTexture(texture);
+    sprite.setTexture(sharedTexture);
     sprite.setTextureRect(sf::IntRect(128, 0, 32, 32));
 
     sf::FloatRect bounds = sprite.getLocalBounds();

@@ -1,7 +1,7 @@
-#include "include/Animation.h"
+#include "include/PlayerAnimation.h"
 #include "include/Direction.h"
 
-Animation::Animation(sf::Texture *texture, float switchTime)
+PlayerAnimation::PlayerAnimation(sf::Texture *texture, float switchTime)
     : defaultRect(128, 0, 32, 32)
 {
     this->switchTime = switchTime;
@@ -14,11 +14,11 @@ Animation::Animation(sf::Texture *texture, float switchTime)
     textureRect = defaultRect;
 }
 
-Animation::~Animation()
+PlayerAnimation::~PlayerAnimation()
 {
 }
 
-void Animation::Update(Direction direction, float deltaTime)
+void PlayerAnimation::Update(Direction direction, float deltaTime)
 {
     if (direction == Direction::NONE)
     {

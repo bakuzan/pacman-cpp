@@ -2,14 +2,14 @@
 
 #include "Direction.h"
 
-#ifndef ANIMATION_H
-#define ANIMATION_H
+#ifndef PLAYERANIMATION_H
+#define PLAYERANIMATION_H
 
-class Animation
+class PlayerAnimation
 {
 public:
-    Animation(sf::Texture *texture, float switchTime);
-    ~Animation();
+    PlayerAnimation(sf::Texture *texture, float switchTime);
+    ~PlayerAnimation();
 
     void Update(Direction direction, float deltaTime);
 
@@ -25,4 +25,4 @@ private:
     bool returningToDefault;
 };
 
-#endif // ANIMATION_H
+#endif // PLAYERANIMATION_H

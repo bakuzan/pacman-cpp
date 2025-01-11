@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "include/CellType.h"
+#include "include/Ghost.h"
 #include "include/Player.h"
 #include "include/PickUp.h"
 
@@ -18,6 +19,7 @@ static const float GRID_HEIGHT = 31.0f + GRID_OFFSET_Y;
 static const float SPRITE_SIZE = 1.0f;
 
 std::vector<sf::RectangleShape> walls;
+std::vector<Ghost> ghosts;
 std::vector<PickUp> pickUps;
 
 void writeToLogFile(const std::string &message)
@@ -27,7 +29,7 @@ void writeToLogFile(const std::string &message)
     logFile.close();
 }
 
-void ReadAndProcessMap(Player &player)
+void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
 {
     std::ifstream file("./resources/map.txt");
     if (!file.is_open())
@@ -36,6 +38,7 @@ void ReadAndProcessMap(Player &player)
         exit(EXIT_FAILURE);
     }
 
+    int ghostColumnIndex = 0;
     std::string line;
     int lineIndex = 0;
     while (getline(file, line))
@@ -84,6 +87,13 @@ void ReadAndProcessMap(Player &player)
                 pickUps.push_back({CellType::POWER_UP, x, y});
                 break;
             }
+            case CellType::GHOST_START_POSITION:
+            {
+                Ghost gst(sharedTexture, SPRITE_SIZE, ghostColumnIndex++);
+                gst.SetPosition(x, y);
+                ghosts.push_back(gst);
+                break;
+            }
             case CellType::PACMAN_START_POSITION:
             {
                 player.SetPosition(x, y);
@@ -122,6 +132,9 @@ int main()
     sf::Color transparentColor = spritesheet.getPixel(0, 0);
     spritesheet.createMaskFromColor(transparentColor);
 
+    sf::Texture sharedTexture;
+    sharedTexture.loadFromImage(spritesheet);
+
     // Load font for display text
     sf::Font font;
     if (!font.loadFromFile("./resources/PressStart2P-Regular.ttf"))
@@ -139,10 +152,10 @@ int main()
     readyText.setPosition(11.5f, 17.75f);
 
     // Create player
-    Player player = Player(spritesheet, SPRITE_SIZE);
+    Player player = Player(sharedTexture, SPRITE_SIZE);
 
     // Process map
-    ReadAndProcessMap(player);
+    ReadAndProcessMap(sharedTexture, player);
 
     // Get min/max x coordinate for the "teleport" tunnel
     auto [minWall, maxWall] = std::minmax_element(walls.begin(), walls.end(),
@@ -218,6 +231,11 @@ int main()
         // Logic
         if (!isPreGame)
         {
+            for (auto &gst : ghosts)
+            {
+                gst.Update(deltaTime, walls, minX, maxX);
+            }
+
             player.Update(newDirection, deltaTime, walls, minX, maxX);
 
             // Eat pellets?
@@ -252,8 +270,6 @@ int main()
             }
         }
 
-        player.Draw(window);
-
         for (auto &wall : walls)
         {
             window.draw(wall);
@@ -270,6 +286,13 @@ int main()
             cs.setFillColor(sf::Color::White);
             cs.setPosition(pu.x, pu.y);
             window.draw(cs);
+        }
+
+        player.Draw(window);
+
+        for (auto &gst : ghosts)
+        {
+            gst.Draw(window);
         }
 
         // Display new window
