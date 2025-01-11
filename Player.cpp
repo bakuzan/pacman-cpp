@@ -53,17 +53,39 @@ void Player::Update(float deltaTime, const std::vector<sf::RectangleShape> &wall
         newDirection = Direction::DOWN;
     }
 
-    bool canMove = CanMove(newDirection, deltaTime, walls);
+    bool canMove = true;
+    sf::Vector2f collisionOffset;
+    sf::Vector2f originalPosition = sprite.getPosition();
+    UpdateVelocity(newDirection, deltaTime);
+
+    sf::Vector2f newPosition = originalPosition + velocity;
+    sprite.setPosition(newPosition);
+
+    if (direction != newDirection &&
+        CheckTileCollision(sprite, walls, collisionOffset))
+    {
+        canMove = false;
+        sprite.setPosition(originalPosition);
+    }
 
     // If you cant move in the new direction, try to keep moving in your current one
-    if (!canMove &&
-        direction != newDirection &&
+    if ((!canMove || direction == newDirection) &&
         direction != Direction::NONE)
     {
-        canMove = CanMove(this->direction, deltaTime, walls);
-        if (canMove)
+        UpdateVelocity(direction, deltaTime);
+
+        newPosition = originalPosition + velocity;
+        sprite.setPosition(newPosition);
+
+        if (CheckTileCollision(sprite, walls, collisionOffset))
+        {
+            canMove = false;
+            sprite.move(-collisionOffset);
+        }
+        else
         {
             // Make newDirection equal to current direction if that movement is good.
+            canMove = true;
             newDirection = this->direction;
         }
     }
@@ -74,7 +96,6 @@ void Player::Update(float deltaTime, const std::vector<sf::RectangleShape> &wall
 
         animation.Update(this->direction, deltaTime);
         sprite.setTextureRect(animation.textureRect);
-        sprite.move(velocity * deltaTime);
     }
     else if (direction == newDirection)
     {

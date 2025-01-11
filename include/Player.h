@@ -29,11 +29,13 @@ private:
     Animation animation;
 
 private:
-    bool CheckTileCollision(sf::Sprite player, const std::vector<sf::RectangleShape> &walls)
+    bool CheckTileCollision(sf::Sprite player, const std::vector<sf::RectangleShape> &walls, sf::Vector2f &collisionOffset)
     {
         float tolerance = 0.05f;
         sf::FloatRect playerBounds = player.getGlobalBounds();
         sf::FloatRect intersection;
+
+        collisionOffset = sf::Vector2f(0.0f, 0.0f);
 
         for (const auto &wall : walls)
         {
@@ -42,8 +44,7 @@ private:
             // Check if the player bounds intersect with any wall
             if (playerBounds.intersects(wallBounds, intersection))
             {
-                if (intersection.width < tolerance &&
-                    intersection.height < tolerance)
+                if (intersection.width < tolerance && intersection.height < tolerance)
                 {
                     continue;
                 }
@@ -51,43 +52,39 @@ private:
                 // Use the intersection to determine which side is blocking
                 if (intersection.width < intersection.height)
                 {
-                    std::cout << "Intersection wxh: "
-                              << intersection.width
-                              << "x"
-                              << intersection.height
-                              << "\n";
                     // Horizontal collision
-                    if (velocity.x > 0)
+                    if (playerBounds.left < wallBounds.left)
                     {
+                        collisionOffset.x = intersection.width; // Collision on the right
                         std::cout << "Horizontal collision on the right\n";
-                        return true;
                     }
-                    else if (velocity.x < 0)
+                    else
                     {
+                        collisionOffset.x = -intersection.width; // Collision on the left
                         std::cout << "Horizontal collision on the left\n";
-                        return true;
                     }
                 }
                 else
                 {
                     // Vertical collision
-                    if (velocity.y > 0)
+                    if (playerBounds.top < wallBounds.top)
                     {
+                        collisionOffset.y = intersection.height; // Collision below
                         std::cout << "Vertical collision below\n";
-                        return true;
                     }
-                    else if (velocity.y < 0)
+                    else
                     {
+                        collisionOffset.y = -intersection.height; // Collision above
                         std::cout << "Vertical collision above\n";
-                        return true;
                     }
                 }
+                return true;
             }
         }
 
         return false;
     }
-    void UpdateVelocity(Direction newDirection)
+    void UpdateVelocity(Direction newDirection, float deltaTime)
     {
         float speed = 5.0f;
         velocity.x = 0.0f;
@@ -96,31 +93,21 @@ private:
         switch (newDirection)
         {
         case Direction::LEFT:
-            velocity.x -= speed;
+            velocity.x -= speed * deltaTime;
             break;
         case Direction::UP:
-            velocity.y -= speed;
+            velocity.y -= speed * deltaTime;
             break;
         case Direction::RIGHT:
-            velocity.x += speed;
+            velocity.x += speed * deltaTime;
             break;
         case Direction::DOWN:
-            velocity.y += speed;
+            velocity.y += speed * deltaTime;
             break;
         default:
             // No movement, do nothing
             break;
         }
-    }
-    bool CanMove(Direction newDirection, float deltaTime, const std::vector<sf::RectangleShape> &walls)
-    {
-        sf::Vector2f position = sprite.getPosition();
-        UpdateVelocity(newDirection);
-        sf::Vector2f newPosition = position + (velocity * deltaTime);
-
-        sf::Sprite tempSprite = sprite;
-        tempSprite.setPosition(newPosition);
-        return !CheckTileCollision(tempSprite, walls);
     }
 };
 
