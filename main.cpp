@@ -144,6 +144,16 @@ int main()
     // Process map
     ReadAndProcessMap(player);
 
+    // Get min/max x coordinate for the "teleport" tunnel
+    auto [minWall, maxWall] = std::minmax_element(walls.begin(), walls.end(),
+                                                  [](const sf::RectangleShape &a, const sf::RectangleShape &b)
+                                                  {
+                                                      return a.getPosition().x < b.getPosition().x;
+                                                  });
+
+    float minX = minWall->getPosition().x;
+    float maxX = maxWall->getPosition().x;
+
     // Game state
     bool isPreGame = true;
     float displayDuration = 3.0f;
@@ -182,10 +192,33 @@ int main()
             }
         }
 
+        // Player Input
+        Direction newDirection = Direction::NONE;
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+        {
+            newDirection = Direction::LEFT;
+        }
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+        {
+            newDirection = Direction::RIGHT;
+        }
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+        {
+            newDirection = Direction::UP;
+        }
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+        {
+            newDirection = Direction::DOWN;
+        }
+
         // Logic
         if (!isPreGame)
         {
-            player.Update(deltaTime, walls);
+            player.Update(newDirection, deltaTime, walls, minX, maxX);
 
             // Eat pellets?
             sf::Vector2f playerPos = player.GetPosition();

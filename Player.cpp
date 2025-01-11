@@ -29,29 +29,12 @@ Player::~Player()
     // Destructor
 }
 
-void Player::Update(float deltaTime, const std::vector<sf::RectangleShape> &walls)
+void Player::Update(Direction newDirection, float deltaTime, const std::vector<sf::RectangleShape> &walls, float minX, float maxX)
 {
-    Direction newDirection = this->direction;
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-    {
-        newDirection = Direction::LEFT;
-    }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-    {
-        newDirection = Direction::RIGHT;
-    }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-    {
-        newDirection = Direction::UP;
-    }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-    {
-        newDirection = Direction::DOWN;
-    }
+    // No new direction means stay the course!
+    newDirection = newDirection == Direction::NONE
+                       ? this->direction
+                       : newDirection;
 
     bool canMove = true;
     sf::Vector2f collisionOffset;
@@ -93,6 +76,16 @@ void Player::Update(float deltaTime, const std::vector<sf::RectangleShape> &wall
     if (canMove)
     {
         this->direction = newDirection;
+
+        // Do we need to "teleport"?
+        if (newPosition.x < minX ||
+            newPosition.x > maxX)
+        {
+            newPosition.x = newPosition.x < minX
+                                ? maxX
+                                : minX;
+            sprite.setPosition(newPosition);
+        }
 
         animation.Update(this->direction, deltaTime);
         sprite.setTextureRect(animation.textureRect);

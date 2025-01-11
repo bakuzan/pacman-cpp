@@ -19,7 +19,7 @@ public:
     void Draw(sf::RenderWindow &window);
     void SetDirection(Direction newDirection);
     void SetPosition(float x, float y);
-    void Update(float deltaTime, const std::vector<sf::RectangleShape> &walls);
+    void Update(Direction newDirection, float deltaTime, const std::vector<sf::RectangleShape> &walls, float minX, float maxX);
 
 private:
     sf::Texture texture;
@@ -56,12 +56,12 @@ private:
                     if (playerBounds.left < wallBounds.left)
                     {
                         collisionOffset.x = intersection.width; // Collision on the right
-                        std::cout << "Horizontal collision on the right\n";
+                        // std::cout << "Horizontal collision on the right\n";
                     }
                     else
                     {
                         collisionOffset.x = -intersection.width; // Collision on the left
-                        std::cout << "Horizontal collision on the left\n";
+                        // std::cout << "Horizontal collision on the left\n";
                     }
                 }
                 else
@@ -70,12 +70,12 @@ private:
                     if (playerBounds.top < wallBounds.top)
                     {
                         collisionOffset.y = intersection.height; // Collision below
-                        std::cout << "Vertical collision below\n";
+                        // std::cout << "Vertical collision below\n";
                     }
                     else
                     {
                         collisionOffset.y = -intersection.height; // Collision above
-                        std::cout << "Vertical collision above\n";
+                        // std::cout << "Vertical collision above\n";
                     }
                 }
                 return true;
