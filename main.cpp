@@ -175,6 +175,8 @@ int main()
     float deltaTime = 0.0f;
     sf::Clock clock;
 
+    GhostModeController *ghostModeController = GhostModeController::GetInstance();
+
     while (window.isOpen())
     {
         // Timing
@@ -231,12 +233,14 @@ int main()
         // Logic
         if (!isPreGame)
         {
+            player.Update(newDirection, deltaTime, walls, minX, maxX);
+
+            ghostModeController->Update(deltaTime);
+
             for (auto &gst : ghosts)
             {
-                gst.Update(deltaTime, walls, minX, maxX);
+                gst.Update(deltaTime, walls, player, minX, maxX);
             }
-
-            player.Update(newDirection, deltaTime, walls, minX, maxX);
 
             // Eat pellets?
             sf::Vector2f playerPos = player.GetPosition();

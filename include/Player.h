@@ -14,7 +14,7 @@ public:
     Player(sf::Texture &sharedTexture, float spriteSize);
     ~Player();
 
-    sf::Vector2f GetPosition() { return sprite.getPosition(); };
+    sf::Vector2f GetPosition() const { return sprite.getPosition(); };
 
     void Draw(sf::RenderWindow &window);
     void SetDirection(Direction newDirection);
