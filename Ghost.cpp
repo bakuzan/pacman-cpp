@@ -26,7 +26,6 @@ Ghost::Ghost(sf::Texture &sharedTexture, float spriteSize, int spriteSheetColumn
                 : 4.8;
 
     currentDirection = Direction::NONE;
-    nextDirection = Direction::LEFT;
     mode = GhostModeController::GetInstance();
 
     std::cout << "SpriteSheetColumnIndex: " << spriteSheetColumnIndex << "\n";
@@ -43,15 +42,34 @@ Ghost::~Ghost()
 
 void Ghost::Update(float deltaTime, const std::vector<sf::RectangleShape> &walls, const Player &player, float minX, float maxX)
 {
-    Direction movingDirection = nextDirection;
     GhostMode currentMode = mode->GetMode();
-    targetTile = GetTargetTile(currentMode, player);
+    sf::Vector2f currentPosition = sprite.getPosition();
+    sf::Vector2f collisionOffset;
 
-    // TODO
-    // Move towards target tile (not allowed to turn back) check collisions
-    // Set nextDirection
+    sf::Vector2f targetPosition = GetTargetTile(currentMode, walls, player);
+    Direction movingDirection = DetermineDirection(deltaTime, walls, currentDirection, sprite, targetPosition, collisionOffset);
+    sf::Vector2f newPosition = currentPosition + GetDirectionVector(deltaTime, movingDirection);
 
+    // Set position and offset for determined direction
+    sprite.setPosition(newPosition);
+    sprite.move(-collisionOffset);
+
+    // Do we need to "teleport"?
+    if (newPosition.x < minX ||
+        newPosition.x > maxX)
+    {
+        newPosition.x = newPosition.x < minX
+                            ? maxX
+                            : minX;
+        sprite.setPosition(newPosition);
+    }
+
+    // Animate
     animation.Update(movingDirection, deltaTime);
+    sprite.setTextureRect(animation.textureRect);
+
+    // Update to new current values
+    currentDirection = movingDirection;
 }
 
 void Ghost::SetPosition(float x, float y)

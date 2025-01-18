@@ -1,9 +1,15 @@
 #include <SFML/Graphics.hpp>
+#include <cmath>
+#include <unordered_map>
+#include <vector>
 
+#include "Collider.h"
 #include "GhostAnimation.h"
 #include "GhostMode.h"
 #include "GhostPersonality.h"
 #include "GhostModeController.h"
+#include "GhostMovementChase.h"
+#include "GhostMovementScatter.h"
 #include "Player.h"
 
 #ifndef GHOST_H
@@ -24,7 +30,6 @@ public:
 private:
     sf::Texture texture;
     sf::Sprite sprite;
-    sf::Vector2f velocity;
     GhostAnimation animation;
 
     GhostPersonality personality;
@@ -33,44 +38,101 @@ private:
     GhostModeController *mode;
 
     Direction currentDirection;
-    Direction nextDirection;
-    sf::Vector2f targetTile;
 
 private:
-    sf::Vector2f GetTargetTile(GhostMode currentMode, const Player &player)
+    sf::Vector2f GetTargetTile(GhostMode currentMode, const std::vector<sf::RectangleShape> &walls, const Player &player)
     {
         switch (currentMode)
         {
         case GhostMode::SCATTER:
-            return sf::Vector2f();
+            return GhostMovementScatter::GetTargetTileForPersonality(personality, walls);
         case GhostMode::CHASE:
-            return player.GetPosition();
+            return GhostMovementChase::GetTargetTileForPersonality(personality, player.GetPosition());
         default:
             return sf::Vector2f();
         }
     }
-    void UpdateVelocity(Direction newDirection, float deltaTime)
+    float calculateDistance(sf::Vector2f a, sf::Vector2f b)
     {
-        velocity.x = 0.0f;
-        velocity.y = 0.0f;
+        return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
+    }
+    Direction DetermineDirection(float deltaTime, const std::vector<sf::RectangleShape> &walls, Direction currentDirection, sf::Sprite ghost, sf::Vector2f targetPosition, sf::Vector2f &collisionOffset)
+    {
+        // Possible directions
+        std::vector<Direction> directions = {UP, LEFT, DOWN, RIGHT};
 
-        switch (newDirection)
+        // Exclude reverse direction
+        switch (currentDirection)
         {
-        case Direction::LEFT:
-            velocity.x -= speed * deltaTime;
+        case UP:
+            directions.erase(std::remove(directions.begin(), directions.end(), DOWN), directions.end());
             break;
-        case Direction::UP:
-            velocity.y -= speed * deltaTime;
+        case DOWN:
+            directions.erase(std::remove(directions.begin(), directions.end(), UP), directions.end());
             break;
-        case Direction::RIGHT:
-            velocity.x += speed * deltaTime;
+        case LEFT:
+            directions.erase(std::remove(directions.begin(), directions.end(), RIGHT), directions.end());
             break;
-        case Direction::DOWN:
-            velocity.y += speed * deltaTime;
+        case RIGHT:
+            directions.erase(std::remove(directions.begin(), directions.end(), LEFT), directions.end());
             break;
+        }
+
+        float minDistance = std::numeric_limits<float>::max();
+        Direction selectedDirection = currentDirection;
+        std::unordered_map<Direction, int> priorityMap = {{UP, 1}, {LEFT, 2}, {DOWN, 3}, {RIGHT, 4}};
+        sf::Vector2f currentPosition = ghost.getPosition();
+        sf::Vector2f localCollisionOffset;
+
+        for (Direction direction : directions)
+        {
+            sf::Vector2f nextPosition = currentPosition + GetDirectionVector(deltaTime, direction);
+            ghost.setPosition(nextPosition);
+
+            bool willCollide = Collider::CheckTileCollision(ghost, walls, localCollisionOffset);
+            if (willCollide && direction != currentDirection)
+            {
+                continue;
+            }
+            else if (willCollide && direction == currentDirection)
+            {
+                nextPosition -= localCollisionOffset;
+            }
+
+            float distance = calculateDistance(nextPosition, targetPosition);
+
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                selectedDirection = direction;
+                collisionOffset = localCollisionOffset;
+            }
+            else if (distance == minDistance)
+            {
+                if (priorityMap[direction] < priorityMap[selectedDirection])
+                {
+                    selectedDirection = direction;
+                    collisionOffset = localCollisionOffset;
+                }
+            }
+        }
+
+        return selectedDirection;
+    }
+    sf::Vector2f GetDirectionVector(float deltaTime, Direction direction)
+    {
+        switch (direction)
+        {
+        case UP:
+            return sf::Vector2f(0, -1) * speed * deltaTime;
+        case DOWN:
+            return sf::Vector2f(0, 1) * speed * deltaTime;
+        case LEFT:
+            return sf::Vector2f(-1, 0) * speed * deltaTime;
+        case RIGHT:
+            return sf::Vector2f(1, 0) * speed * deltaTime;
         default:
-            // No movement, do nothing
-            break;
+            return sf::Vector2f(0, 0) * speed * deltaTime;
         }
     }
 };

@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "include/CellType.h"
+#include "include/Collider.h"
 #include "include/Direction.h"
 #include "include/Player.h"
 
@@ -43,7 +44,7 @@ void Player::Update(Direction newDirection, float deltaTime, const std::vector<s
     sprite.setPosition(newPosition);
 
     if (direction != newDirection &&
-        CheckTileCollision(sprite, walls, collisionOffset))
+        Collider::CheckTileCollision(sprite, walls, collisionOffset))
     {
         canMove = false;
         sprite.setPosition(originalPosition);
@@ -58,7 +59,7 @@ void Player::Update(Direction newDirection, float deltaTime, const std::vector<s
         newPosition = originalPosition + velocity;
         sprite.setPosition(newPosition);
 
-        if (CheckTileCollision(sprite, walls, collisionOffset))
+        if (Collider::CheckTileCollision(sprite, walls, collisionOffset))
         {
             canMove = false;
             sprite.move(-collisionOffset);

@@ -242,6 +242,9 @@ int main()
                 gst.Update(deltaTime, walls, player, minX, maxX);
             }
 
+            // Did the ghosts get pacman?
+            // TODO
+
             // Eat pellets?
             sf::Vector2f playerPos = player.GetPosition();
             int playerX = static_cast<int>(std::round(playerPos.x));
