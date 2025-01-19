@@ -56,47 +56,50 @@ private:
     {
         return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
     }
-    Direction DetermineDirection(float deltaTime, const std::vector<sf::RectangleShape> &walls, Direction currentDirection, sf::Sprite ghost, sf::Vector2f targetPosition, sf::Vector2f &collisionOffset)
+    Direction DetermineDirection(float deltaTime, const std::vector<sf::RectangleShape> &walls, Direction lastMovedDirection, sf::Sprite ghost, sf::Vector2f targetPosition, sf::Vector2f &collisionOffset)
     {
         // Possible directions
         std::vector<Direction> directions = {UP, LEFT, DOWN, RIGHT};
 
-        // Exclude reverse direction
-        switch (currentDirection)
-        {
-        case UP:
-            directions.erase(std::remove(directions.begin(), directions.end(), DOWN), directions.end());
-            break;
-        case DOWN:
-            directions.erase(std::remove(directions.begin(), directions.end(), UP), directions.end());
-            break;
-        case LEFT:
-            directions.erase(std::remove(directions.begin(), directions.end(), RIGHT), directions.end());
-            break;
-        case RIGHT:
-            directions.erase(std::remove(directions.begin(), directions.end(), LEFT), directions.end());
-            break;
-        }
+        // Map to store reverse directions
+        std::unordered_map<Direction, Direction> reverseDirectionMap = {
+            {UP, DOWN},
+            {DOWN, UP},
+            {LEFT, RIGHT},
+            {RIGHT, LEFT}};
 
+        // Exclude reverse direction
+        Direction reverseDirection = reverseDirectionMap[lastMovedDirection];
+        directions.erase(std::remove(directions.begin(),
+                                     directions.end(),
+                                     reverseDirection),
+                         directions.end());
+
+        float epsilon = 1e-5;
         float minDistance = std::numeric_limits<float>::max();
-        Direction selectedDirection = currentDirection;
+        Direction selectedDirection = lastMovedDirection;
         std::unordered_map<Direction, int> priorityMap = {{UP, 1}, {LEFT, 2}, {DOWN, 3}, {RIGHT, 4}};
         sf::Vector2f currentPosition = ghost.getPosition();
         sf::Vector2f localCollisionOffset;
 
         for (Direction direction : directions)
         {
-            sf::Vector2f nextPosition = currentPosition + GetDirectionVector(deltaTime, direction);
+            sf::Vector2f velocity = GetDirectionVector(deltaTime, direction);
+            sf::Vector2f nextPosition = currentPosition + velocity;
             ghost.setPosition(nextPosition);
 
             bool willCollide = Collider::CheckTileCollision(ghost, walls, localCollisionOffset);
-            if (willCollide && direction != currentDirection)
+            if (willCollide && direction != lastMovedDirection)
             {
                 continue;
             }
-            else if (willCollide && direction == currentDirection)
+            else if (willCollide && direction == lastMovedDirection)
             {
-                nextPosition -= localCollisionOffset;
+                sf::Vector2f diff = velocity - localCollisionOffset;
+                if (std::abs(diff.x) <= epsilon && std::abs(diff.y) <= epsilon)
+                {
+                    continue;
+                }
             }
 
             float distance = calculateDistance(nextPosition, targetPosition);

@@ -28,11 +28,11 @@ Ghost::Ghost(sf::Texture &sharedTexture, float spriteSize, int spriteSheetColumn
     currentDirection = Direction::NONE;
     mode = GhostModeController::GetInstance();
 
-    std::cout << "SpriteSheetColumnIndex: " << spriteSheetColumnIndex << "\n";
-    std::cout << "Texture Rect: " << sprite.getTextureRect().left << ", "
-              << sprite.getTextureRect().top << ", "
-              << sprite.getTextureRect().width << ", "
-              << sprite.getTextureRect().height << "\n";
+    // std::cout << "SpriteSheetColumnIndex: " << spriteSheetColumnIndex << "\n";
+    // std::cout << "Texture Rect: " << sprite.getTextureRect().left << ", "
+    //           << sprite.getTextureRect().top << ", "
+    //           << sprite.getTextureRect().width << ", "
+    //           << sprite.getTextureRect().height << "\n";
 }
 
 Ghost::~Ghost()
@@ -47,8 +47,8 @@ void Ghost::Update(float deltaTime, const std::vector<sf::RectangleShape> &walls
     sf::Vector2f collisionOffset;
 
     sf::Vector2f targetPosition = GetTargetTile(currentMode, walls, player);
-    Direction movingDirection = DetermineDirection(deltaTime, walls, currentDirection, sprite, targetPosition, collisionOffset);
-    sf::Vector2f newPosition = currentPosition + GetDirectionVector(deltaTime, movingDirection);
+    Direction newDirection = DetermineDirection(deltaTime, walls, currentDirection, sprite, targetPosition, collisionOffset);
+    sf::Vector2f newPosition = currentPosition + GetDirectionVector(deltaTime, newDirection);
 
     // Set position and offset for determined direction
     sprite.setPosition(newPosition);
@@ -65,11 +65,11 @@ void Ghost::Update(float deltaTime, const std::vector<sf::RectangleShape> &walls
     }
 
     // Animate
-    animation.Update(movingDirection, deltaTime);
+    animation.Update(newDirection, deltaTime);
     sprite.setTextureRect(animation.textureRect);
 
     // Update to new current values
-    currentDirection = movingDirection;
+    currentDirection = newDirection;
 }
 
 void Ghost::SetPosition(float x, float y)
