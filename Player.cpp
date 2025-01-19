@@ -6,7 +6,7 @@
 #include "include/Player.h"
 
 Player::Player(sf::Texture &sharedTexture, float spriteSize)
-    : texture(sharedTexture), animation(&sharedTexture, 0.1f)
+    : texture(sharedTexture), animation(&sharedTexture, 0.1f), speed(5.0f)
 {
     this->direction = Direction::NONE;
 

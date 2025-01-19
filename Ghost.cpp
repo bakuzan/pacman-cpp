@@ -2,6 +2,7 @@
 
 #include "include/Ghost.h"
 #include "include/GhostModeController.h"
+#include "include/GhostMovement.h"
 #include "include/Player.h"
 
 Ghost::Ghost(sf::Texture &sharedTexture, float spriteSize, int spriteSheetColumnIndex)
@@ -40,15 +41,15 @@ Ghost::~Ghost()
     // Destructor
 }
 
-void Ghost::Update(float deltaTime, const std::vector<sf::RectangleShape> &walls, const Player &player, float minX, float maxX)
+void Ghost::Update(float deltaTime, const std::vector<sf::RectangleShape> &walls, const std::vector<Ghost> &ghosts, const Player &player, float minX, float maxX)
 {
     GhostMode currentMode = mode->GetMode();
     sf::Vector2f currentPosition = sprite.getPosition();
     sf::Vector2f collisionOffset;
 
-    sf::Vector2f targetPosition = GetTargetTile(currentMode, walls, player);
+    sf::Vector2f targetPosition = GhostMovement::GetTargetTile(personality, currentMode, walls, ghosts, player, deltaTime);
     Direction newDirection = DetermineDirection(deltaTime, walls, currentDirection, sprite, targetPosition, collisionOffset);
-    sf::Vector2f newPosition = currentPosition + GetDirectionVector(deltaTime, newDirection);
+    sf::Vector2f newPosition = currentPosition + GhostMovement::GetDirectionVector(newDirection, speed, deltaTime);
 
     // Set position and offset for determined direction
     sprite.setPosition(newPosition);

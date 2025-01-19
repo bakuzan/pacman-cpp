@@ -1,3 +1,6 @@
+#ifndef GHOST_H
+#define GHOST_H
+
 #include <SFML/Graphics.hpp>
 #include <cmath>
 #include <unordered_map>
@@ -8,12 +11,8 @@
 #include "GhostMode.h"
 #include "GhostPersonality.h"
 #include "GhostModeController.h"
-#include "GhostMovementChase.h"
-#include "GhostMovementScatter.h"
+#include "GhostMovement.h"
 #include "Player.h"
-
-#ifndef GHOST_H
-#define GHOST_H
 
 class Ghost
 {
@@ -21,11 +20,12 @@ public:
     Ghost(sf::Texture &sharedTexture, float spriteSize, int spriteSheetColumnIndex);
     ~Ghost();
 
-    sf::Vector2f GetPosition() { return sprite.getPosition(); };
+    sf::Vector2f GetPosition() const { return sprite.getPosition(); };
+    GhostPersonality GetPersonality() const { return this->personality; };
 
     void Draw(sf::RenderWindow &window);
     void SetPosition(float x, float y);
-    void Update(float deltaTime, const std::vector<sf::RectangleShape> &walls, const Player &player, float minX, float maxX);
+    void Update(float deltaTime, const std::vector<sf::RectangleShape> &walls, const std::vector<Ghost> &ghosts, const Player &player, float minX, float maxX);
 
 private:
     sf::Texture texture;
@@ -40,18 +40,6 @@ private:
     Direction currentDirection;
 
 private:
-    sf::Vector2f GetTargetTile(GhostMode currentMode, const std::vector<sf::RectangleShape> &walls, const Player &player)
-    {
-        switch (currentMode)
-        {
-        case GhostMode::SCATTER:
-            return GhostMovementScatter::GetTargetTileForPersonality(personality, walls);
-        case GhostMode::CHASE:
-            return GhostMovementChase::GetTargetTileForPersonality(personality, player.GetPosition());
-        default:
-            return sf::Vector2f();
-        }
-    }
     float calculateDistance(sf::Vector2f a, sf::Vector2f b)
     {
         return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
@@ -84,7 +72,7 @@ private:
 
         for (Direction direction : directions)
         {
-            sf::Vector2f velocity = GetDirectionVector(deltaTime, direction);
+            sf::Vector2f velocity = GhostMovement::GetDirectionVector(direction, speed, deltaTime);
             sf::Vector2f nextPosition = currentPosition + velocity;
             ghost.setPosition(nextPosition);
 
@@ -121,22 +109,6 @@ private:
         }
 
         return selectedDirection;
-    }
-    sf::Vector2f GetDirectionVector(float deltaTime, Direction direction)
-    {
-        switch (direction)
-        {
-        case UP:
-            return sf::Vector2f(0, -1) * speed * deltaTime;
-        case DOWN:
-            return sf::Vector2f(0, 1) * speed * deltaTime;
-        case LEFT:
-            return sf::Vector2f(-1, 0) * speed * deltaTime;
-        case RIGHT:
-            return sf::Vector2f(1, 0) * speed * deltaTime;
-        default:
-            return sf::Vector2f(0, 0) * speed * deltaTime;
-        }
     }
 };
 

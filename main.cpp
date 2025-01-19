@@ -239,7 +239,7 @@ int main()
 
             for (auto &gst : ghosts)
             {
-                gst.Update(deltaTime, walls, player, minX, maxX);
+                gst.Update(deltaTime, walls, ghosts, player, minX, maxX);
             }
 
             // Did the ghosts get pacman?
