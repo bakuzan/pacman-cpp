@@ -25,6 +25,8 @@ public:
 private:
     static std::pair<float, float> GetMaxXY(const std::vector<sf::RectangleShape> &walls);
 
+    static sf::Vector2f GetHousedTargetTile(GhostPersonality personality, const std::vector<Ghost> &ghosts);
+
     static sf::Vector2f GetScatterTargetTile(GhostPersonality personality, const std::vector<sf::RectangleShape> &walls);
 
     static sf::Vector2f GetChaseTargetTile(GhostPersonality personality, const std::vector<sf::RectangleShape> &walls, const std::vector<Ghost> &ghosts, const Player &player, float deltaTime);

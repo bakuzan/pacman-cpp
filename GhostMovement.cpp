@@ -1,3 +1,4 @@
+#include "include/Constants.h"
 #include "include/Ghost.h"
 #include "include/GhostMovement.h"
 
@@ -15,6 +16,10 @@ sf::Vector2f GhostMovement::GetTargetTile(GhostPersonality personality, GhostMod
 {
     switch (currentMode)
     {
+    case GhostMode::HOUSED:
+        return GetHousedTargetTile(personality, ghosts);
+    case GhostMode::LEAVING:
+        return sf::Vector2f(Constants::FIRST_OUTSIDE_CELL_LHS);
     case GhostMode::SCATTER:
         return GetScatterTargetTile(personality, walls);
     case GhostMode::CHASE:
@@ -41,6 +46,8 @@ sf::Vector2f GhostMovement::GetDirectionVector(Direction direction, float speed,
     }
 }
 
+// Private
+
 std::pair<float, float> GhostMovement::GetMaxXY(const std::vector<sf::RectangleShape> &walls)
 {
     float maxX = std::numeric_limits<float>::min();
@@ -54,6 +61,26 @@ std::pair<float, float> GhostMovement::GetMaxXY(const std::vector<sf::RectangleS
     }
 
     return {maxX, maxY};
+}
+
+sf::Vector2f GhostMovement::GetHousedTargetTile(GhostPersonality personality, const std::vector<Ghost> &ghosts)
+{
+    auto it = std::find_if(ghosts.cbegin(), ghosts.cend(), [&personality](const Ghost &ghost)
+                           { return ghost.GetPersonality() == personality; });
+
+    auto direction = it->GetDirection();
+    auto position = it->GetPosition();
+
+    if (direction == Direction::LEFT)
+    {
+        return position == Constants::LEFT_MOST_HOUSE_CELL
+                   ? sf::Vector2f(Constants::RIGHT_MOST_HOUSE_CELL)
+                   : sf::Vector2f(Constants::LEFT_MOST_HOUSE_CELL);
+    }
+
+    return position == Constants::RIGHT_MOST_HOUSE_CELL
+               ? sf::Vector2f(Constants::LEFT_MOST_HOUSE_CELL)
+               : sf::Vector2f(Constants::RIGHT_MOST_HOUSE_CELL);
 }
 
 sf::Vector2f GhostMovement::GetScatterTargetTile(GhostPersonality personality, const std::vector<sf::RectangleShape> &walls)

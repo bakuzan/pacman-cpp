@@ -7,16 +7,11 @@
 #include <sstream>
 #include <vector>
 
+#include "include/Constants.h"
 #include "include/CellType.h"
 #include "include/Ghost.h"
 #include "include/Player.h"
 #include "include/PickUp.h"
-
-static const float WINDOW_SIZE = 512.0f;
-static const float GRID_OFFSET_Y = 1.0f;
-static const float GRID_WIDTH = 29.0f;
-static const float GRID_HEIGHT = 31.0f + GRID_OFFSET_Y;
-static const float SPRITE_SIZE = 1.0f;
 
 std::vector<sf::RectangleShape> walls;
 std::vector<Ghost> ghosts;
@@ -51,7 +46,7 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
         {
             int cellContents = std::stoi(number);
             float x = float(numberIndex);
-            float y = float(lineIndex) + GRID_OFFSET_Y;
+            float y = float(lineIndex) + Constants::GRID_OFFSET_Y;
 
             switch (cellContents)
             {
@@ -89,7 +84,7 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
             }
             case CellType::GHOST_START_POSITION:
             {
-                Ghost gst(sharedTexture, SPRITE_SIZE, ghostColumnIndex++);
+                Ghost gst(sharedTexture, Constants::SPRITE_SIZE, ghostColumnIndex++);
                 gst.SetPosition(x, y);
                 ghosts.push_back(gst);
                 break;
@@ -116,9 +111,9 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(WINDOW_SIZE, WINDOW_SIZE), "Pacman C++", sf::Style::Close | sf::Style::Resize);
-    sf::View view(sf::Vector2f(0.0f, 0.0f), sf::Vector2f(GRID_WIDTH, GRID_HEIGHT));
-    view.setCenter(GRID_WIDTH / 2, GRID_HEIGHT / 2);
+    sf::RenderWindow window(sf::VideoMode(Constants::WINDOW_SIZE, Constants::WINDOW_SIZE), "Pacman C++", sf::Style::Close | sf::Style::Resize);
+    sf::View view(sf::Vector2f(0.0f, 0.0f), sf::Vector2f(Constants::GRID_WIDTH, Constants::GRID_HEIGHT));
+    view.setCenter(Constants::GRID_WIDTH / 2, Constants::GRID_HEIGHT / 2);
 
     // Load spritesheet
     sf::Image spritesheet;
@@ -152,7 +147,7 @@ int main()
     readyText.setPosition(11.5f, 17.75f);
 
     // Create player
-    Player player = Player(sharedTexture, SPRITE_SIZE);
+    Player player = Player(sharedTexture, Constants::SPRITE_SIZE);
 
     // Process map
     ReadAndProcessMap(sharedTexture, player);
@@ -201,7 +196,7 @@ int main()
             case sf::Event::Resized:
             {
                 float aspectRatio = float(window.getSize().x) / float(window.getSize().y);
-                view.setSize(GRID_HEIGHT * aspectRatio, GRID_HEIGHT);
+                view.setSize(Constants::GRID_HEIGHT * aspectRatio, Constants::GRID_HEIGHT);
                 break;
             }
             }
@@ -235,7 +230,7 @@ int main()
         {
             player.Update(newDirection, deltaTime, walls, minX, maxX);
 
-            ghostModeController->Update(deltaTime);
+            ghostModeController->Update(deltaTime, ghosts);
 
             for (auto &gst : ghosts)
             {

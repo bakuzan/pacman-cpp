@@ -1,64 +1,35 @@
-#include "GhostMode.h"
-
-#include "GhostMode.h"
-
 #ifndef GHOSTMODECONTROLLER_H
 #define GHOSTMODECONTROLLER_H
+
+#include <map>
+
+#include "GhostMode.h"
+
+class Ghost;
 
 class GhostModeController
 {
 public:
-    static GhostModeController *GetInstance()
-    {
-        static GhostModeController instance;
-        return &instance;
-    }
+    static GhostModeController *GetInstance();
 
-    GhostMode GetMode()
-    {
-        return mode;
-    }
-
-    void Update(float deltaTime)
-    {
-        timer += deltaTime;
-        if (timer >= timeLimit)
-        {
-            if (mode == GhostMode::SCATTER)
-            {
-                Chase();
-            }
-            else
-            {
-                Scatter();
-            }
-        }
-    }
+    GhostMode GetMode(GhostPersonality personality);
+    void Update(float deltaTime, const std::vector<Ghost> &ghosts);
 
 private:
+    std::map<GhostPersonality, GhostMode> overrideModeMap;
     GhostMode mode;
     float timer;
     float timeLimit;
 
 private:
-    GhostModeController() : mode(GhostMode::SCATTER), timer(0), timeLimit(7) {}
+    GhostModeController();
     ~GhostModeController() {}
 
     GhostModeController(const GhostModeController &) = delete;            // Prevent copy-construction
     GhostModeController &operator=(const GhostModeController &) = delete; // Prevent assignment
 
-    void Chase()
-    {
-        mode = GhostMode::CHASE;
-        timeLimit = 20;
-        timer = 0;
-    }
-    void Scatter()
-    {
-        mode = GhostMode::SCATTER;
-        timeLimit = 7;
-        timer = 0;
-    }
+    void Chase();
+    void Scatter();
 };
 
 #endif // GHOSTMODECONTROLLER_H

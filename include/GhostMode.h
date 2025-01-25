@@ -2,7 +2,9 @@
 
 enum GhostMode
 {
-    SCATTER = 0,
+    HOUSED = 0,
+    LEAVING,
+    SCATTER,
     CHASE,
     FRIGHTENED,
     SPAWN

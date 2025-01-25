@@ -28,6 +28,21 @@ Player::~Player()
     // Destructor
 }
 
+sf::Vector2f Player::GetPosition() const
+{
+    return sprite.getPosition();
+}
+
+Direction Player::GetDirection() const
+{
+    return this->direction;
+}
+
+float Player::GetSpeed() const
+{
+    return this->speed;
+}
+
 void Player::Update(Direction newDirection, float deltaTime, const std::vector<sf::RectangleShape> &walls, float minX, float maxX)
 {
     // No new direction means stay the course!
@@ -110,4 +125,31 @@ void Player::SetPosition(float x, float y)
 void Player::Draw(sf::RenderWindow &window)
 {
     window.draw(sprite);
+}
+
+// Private
+
+void Player::UpdateVelocity(Direction newDirection, float deltaTime)
+{
+    velocity.x = 0.0f;
+    velocity.y = 0.0f;
+
+    switch (newDirection)
+    {
+    case Direction::LEFT:
+        velocity.x -= speed * deltaTime;
+        break;
+    case Direction::UP:
+        velocity.y -= speed * deltaTime;
+        break;
+    case Direction::RIGHT:
+        velocity.x += speed * deltaTime;
+        break;
+    case Direction::DOWN:
+        velocity.y += speed * deltaTime;
+        break;
+    default:
+        // No movement, do nothing
+        break;
+    }
 }
