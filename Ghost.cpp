@@ -29,7 +29,7 @@ Ghost::Ghost(sf::Texture &sharedTexture, float spriteSize, int spriteSheetColumn
                 ? 5.0
                 : 4.8;
 
-    currentDirection = Direction::NONE;
+    lastKnownDirection = Direction::NONE;
     mode = GhostModeController::GetInstance();
 
     // std::cout << "SpriteSheetColumnIndex: " << spriteSheetColumnIndex << "\n";
@@ -56,17 +56,19 @@ GhostPersonality Ghost::GetPersonality() const
 
 Direction Ghost::GetDirection() const
 {
-    return currentDirection;
+    return lastKnownDirection;
 }
 
 void Ghost::Update(float deltaTime, const std::vector<Wall> &walls, const std::vector<Ghost> &ghosts, const Player &player, float minX, float maxX)
 {
     GhostMode currentMode = mode->GetMode(personality);
+    bool forceReverseDirection = mode->CheckForcedReverseQueue(personality);
+
     sf::Vector2f currentPosition = sprite.getPosition();
     sf::Vector2f collisionOffset;
 
     sf::Vector2f targetPosition = GhostMovement::GetTargetTile(personality, currentMode, walls, ghosts, player, deltaTime);
-    Direction newDirection = DetermineDirection(deltaTime, walls, currentMode, currentDirection, sprite, targetPosition, collisionOffset);
+    Direction newDirection = DetermineDirection(deltaTime, walls, currentMode, lastKnownDirection, sprite, targetPosition, forceReverseDirection, collisionOffset);
     sf::Vector2f newPosition = currentPosition + GhostMovement::GetDirectionVector(newDirection, speed, deltaTime);
 
     // Set position and offset for determined direction
@@ -88,7 +90,7 @@ void Ghost::Update(float deltaTime, const std::vector<Wall> &walls, const std::v
     sprite.setTextureRect(animation.textureRect);
 
     // Update to new current values
-    currentDirection = newDirection;
+    lastKnownDirection = newDirection;
 }
 
 void Ghost::SetPosition(float x, float y)
@@ -108,11 +110,11 @@ float Ghost::CalculateDistance(sf::Vector2f a, sf::Vector2f b)
     return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
 }
 
-Direction Ghost::DetermineDirection(float deltaTime, const std::vector<Wall> &walls, GhostMode mode, Direction lastMovedDirection, sf::Sprite ghost, sf::Vector2f targetPosition, sf::Vector2f &collisionOffset)
+Direction Ghost::DetermineDirection(float deltaTime, const std::vector<Wall> &walls, GhostMode mode, Direction lastMovedDirection, sf::Sprite ghost, sf::Vector2f targetPosition, bool forceReverseDirection, sf::Vector2f &collisionOffset)
 {
     // Possible directions
     std::vector<Direction> directions = {UP, LEFT, DOWN, RIGHT};
-    ExcludeDirections(mode, lastMovedDirection, directions);
+    ExcludeDirections(mode, lastMovedDirection, forceReverseDirection, directions);
 
     float epsilon = 1e-5;
     float minDistance = std::numeric_limits<float>::max();
@@ -174,7 +176,7 @@ Direction Ghost::DetermineDirection(float deltaTime, const std::vector<Wall> &wa
     return selectedDirection;
 }
 
-void Ghost::ExcludeDirections(const GhostMode &mode, const Direction &lastMovedDirection, std::vector<Direction> &directions)
+void Ghost::ExcludeDirections(const GhostMode &mode, const Direction &lastMovedDirection, bool forceReverseDirection, std::vector<Direction> &directions)
 {
     if (mode == GhostMode::HOUSED)
     {
@@ -187,11 +189,20 @@ void Ghost::ExcludeDirections(const GhostMode &mode, const Direction &lastMovedD
     }
     else
     {
-        // Exclude reverse direction
+        // Exclude or Force reverse direction
         auto reverseDirection = Constants::REVERSE_DIRECTION_MAP.find(lastMovedDirection);
-        directions.erase(std::remove(directions.begin(),
-                                     directions.end(),
-                                     reverseDirection->second),
+
+        directions.erase(std::remove_if(directions.begin(),
+                                        directions.end(),
+                                        [&reverseDirection, forceReverseDirection](Direction &direction)
+                                        {
+                                            if (forceReverseDirection)
+                                            {
+                                                return direction != reverseDirection->second;
+                                            }
+
+                                            return direction == reverseDirection->second;
+                                        }),
                          directions.end());
     }
 }

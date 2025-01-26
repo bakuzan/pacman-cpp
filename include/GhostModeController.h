@@ -13,10 +13,12 @@ public:
     static GhostModeController *GetInstance();
 
     GhostMode GetMode(GhostPersonality personality);
+    bool CheckForcedReverseQueue(GhostPersonality personality);
     void Update(float deltaTime, const std::vector<Ghost> &ghosts);
 
 private:
     std::map<GhostPersonality, GhostMode> overrideModeMap;
+    std::map<GhostPersonality, bool> forceReverseAtNextPossibleMap;
     GhostMode mode;
     float timer;
     float timeLimit;
@@ -30,6 +32,7 @@ private:
 
     void Chase();
     void Scatter();
+    void QueueForcedReverse();
 };
 
 #endif // GHOSTMODECONTROLLER_H

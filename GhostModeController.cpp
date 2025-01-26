@@ -10,6 +10,7 @@ GhostModeController::GhostModeController() : mode(GhostMode::SCATTER), timer(0),
     for (int i = BLINKY; i <= CLYDE; ++i)
     {
         GhostPersonality personality = static_cast<GhostPersonality>(i);
+        forceReverseAtNextPossibleMap[personality] = false;
         overrideModeMap[personality] = personality == BLINKY
                                            ? GhostMode::LEAVING
                                            : GhostMode::HOUSED;
@@ -81,6 +82,21 @@ void GhostModeController::Update(float deltaTime, const std::vector<Ghost> &ghos
     }
 }
 
+bool GhostModeController::CheckForcedReverseQueue(GhostPersonality personality)
+{
+    auto mode = GetMode(personality);
+
+    if (mode == GhostMode::SCATTER ||
+        mode == GhostMode::CHASE)
+    {
+        bool forcedReverse = forceReverseAtNextPossibleMap[personality];
+        forceReverseAtNextPossibleMap[personality] = false;
+        return forcedReverse;
+    }
+
+    return false;
+}
+
 // Private
 
 void GhostModeController::Chase()
@@ -88,10 +104,24 @@ void GhostModeController::Chase()
     mode = GhostMode::CHASE;
     timeLimit = 20;
     timer = 0;
+    QueueForcedReverse();
+    std::cout << "CHASE START" << std::endl;
 }
+
 void GhostModeController::Scatter()
 {
     mode = GhostMode::SCATTER;
     timeLimit = 7;
     timer = 0;
+    QueueForcedReverse();
+    std::cout << "SCATTER START" << std::endl;
+}
+
+void GhostModeController::QueueForcedReverse()
+{
+    for (int i = BLINKY; i <= CLYDE; ++i)
+    {
+        GhostPersonality personality = static_cast<GhostPersonality>(i);
+        forceReverseAtNextPossibleMap[personality] = true;
+    }
 }
