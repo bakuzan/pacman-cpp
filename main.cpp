@@ -124,7 +124,7 @@ int main()
 {
     sf::RenderWindow window(sf::VideoMode(Constants::WINDOW_SIZE, Constants::WINDOW_SIZE), "Pacman C++", sf::Style::Close | sf::Style::Resize);
     sf::View view(sf::Vector2f(0.0f, 0.0f), sf::Vector2f(Constants::GRID_WIDTH, Constants::GRID_HEIGHT));
-    view.setCenter(Constants::GRID_WIDTH / 2, Constants::GRID_HEIGHT / 2);
+    view.setCenter(Constants::GRID_WIDTH / 2.0f, Constants::GRID_HEIGHT / 2.0f);
 
     // Load spritesheet
     sf::Image spritesheet;
@@ -206,6 +206,7 @@ int main()
             }
             case sf::Event::Resized:
             {
+                // Maintain the height of the view to match the window height
                 float aspectRatio = float(window.getSize().x) / float(window.getSize().y);
                 view.setSize(Constants::GRID_HEIGHT * aspectRatio, Constants::GRID_HEIGHT);
                 break;
