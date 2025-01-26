@@ -4,6 +4,7 @@
 #include "include/Collider.h"
 #include "include/Direction.h"
 #include "include/Player.h"
+#include "include/Wall.h"
 
 Player::Player(sf::Texture &sharedTexture, float spriteSize)
     : texture(sharedTexture), animation(&sharedTexture, 0.1f), speed(5.0f)
@@ -43,7 +44,7 @@ float Player::GetSpeed() const
     return this->speed;
 }
 
-void Player::Update(Direction newDirection, float deltaTime, const std::vector<sf::RectangleShape> &walls, float minX, float maxX)
+void Player::Update(Direction newDirection, float deltaTime, const std::vector<Wall> &walls, float minX, float maxX)
 {
     // No new direction means stay the course!
     newDirection = newDirection == Direction::NONE

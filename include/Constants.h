@@ -19,6 +19,8 @@ namespace Constants
     extern const sf::Vector2f FIRST_OUTSIDE_CELL_LHS;
 
     extern const std::unordered_map<Direction, Direction> REVERSE_DIRECTION_MAP;
+
+    extern const float COLLISION_TOLERANCE;
 }
 
 #endif // CONSTANTS_H

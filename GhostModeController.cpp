@@ -3,6 +3,8 @@
 #include "include/GhostModeController.h"
 #include "include/GhostPersonality.h"
 
+#include "include/FloatUtils.h"
+
 GhostModeController::GhostModeController() : mode(GhostMode::SCATTER), timer(0), timeLimit(7)
 {
     for (int i = BLINKY; i <= CLYDE; ++i)
@@ -65,7 +67,7 @@ void GhostModeController::Update(float deltaTime, const std::vector<Ghost> &ghos
                                    { return ghost.GetPersonality() == entry.first; });
 
             sf::Vector2f position = it->GetPosition();
-            if (position == Constants::FIRST_OUTSIDE_CELL_LHS)
+            if (FloatUtils::arePositionsEqual(position, Constants::FIRST_OUTSIDE_CELL_LHS, Constants::COLLISION_TOLERANCE))
             {
                 overrideModeMap.erase(entry.first);
             }

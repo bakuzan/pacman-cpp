@@ -20,4 +20,6 @@ namespace Constants
         {DOWN, UP},
         {LEFT, RIGHT},
         {RIGHT, LEFT}};
+
+    const float COLLISION_TOLERANCE = 0.05f;
 }

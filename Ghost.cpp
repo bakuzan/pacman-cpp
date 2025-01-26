@@ -1,11 +1,12 @@
 #include "iostream"
 
+#include "include/CellType.h"
 #include "include/Constants.h"
 #include "include/Ghost.h"
 #include "include/GhostModeController.h"
 #include "include/GhostMovement.h"
 #include "include/Player.h"
-#include "Ghost.h"
+#include "include/Wall.h"
 
 Ghost::Ghost(sf::Texture &sharedTexture, float spriteSize, int spriteSheetColumnIndex)
     : texture(sharedTexture), animation(&sharedTexture, 0.1f, spriteSheetColumnIndex)
@@ -58,7 +59,7 @@ Direction Ghost::GetDirection() const
     return currentDirection;
 }
 
-void Ghost::Update(float deltaTime, const std::vector<sf::RectangleShape> &walls, const std::vector<Ghost> &ghosts, const Player &player, float minX, float maxX)
+void Ghost::Update(float deltaTime, const std::vector<Wall> &walls, const std::vector<Ghost> &ghosts, const Player &player, float minX, float maxX)
 {
     GhostMode currentMode = mode->GetMode(personality);
     sf::Vector2f currentPosition = sprite.getPosition();
@@ -107,7 +108,7 @@ float Ghost::CalculateDistance(sf::Vector2f a, sf::Vector2f b)
     return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
 }
 
-Direction Ghost::DetermineDirection(float deltaTime, const std::vector<sf::RectangleShape> &walls, GhostMode mode, Direction lastMovedDirection, sf::Sprite ghost, sf::Vector2f targetPosition, sf::Vector2f &collisionOffset)
+Direction Ghost::DetermineDirection(float deltaTime, const std::vector<Wall> &walls, GhostMode mode, Direction lastMovedDirection, sf::Sprite ghost, sf::Vector2f targetPosition, sf::Vector2f &collisionOffset)
 {
     // Possible directions
     std::vector<Direction> directions = {UP, LEFT, DOWN, RIGHT};
@@ -120,11 +121,15 @@ Direction Ghost::DetermineDirection(float deltaTime, const std::vector<sf::Recta
     sf::Vector2f currentPosition = ghost.getPosition();
     sf::Vector2f localCollisionOffset;
 
-    std::vector<sf::RectangleShape> filteredWalls(walls);
+    std::vector<Wall> filteredWalls(walls);
     if (mode == GhostMode::LEAVING ||
         mode == GhostMode::SPAWN)
     {
-        filteredWalls.erase(std::remove_if(filteredWalls.begin(), filteredWalls.end(), IsGhostDoor),
+        filteredWalls.erase(std::remove_if(filteredWalls.begin(), filteredWalls.end(),
+                                           [](const Wall &wall)
+                                           {
+                                               return Ghost::IsGhostDoor(wall);
+                                           }),
                             filteredWalls.end());
     }
 
@@ -191,7 +196,7 @@ void Ghost::ExcludeDirections(const GhostMode &mode, const Direction &lastMovedD
     }
 }
 
-bool Ghost::IsGhostDoor(const sf::RectangleShape &wall)
+bool Ghost::IsGhostDoor(const Wall &wall)
 {
-    return false; // TODO
+    return wall.type == CellType::GHOST_DOOR;
 }

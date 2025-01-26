@@ -15,6 +15,7 @@
         "${workspaceFolder}\\GhostModeController.cpp",
         "${workspaceFolder}\\GhostMovement.cpp",
         "${workspaceFolder}\\Ghost.cpp",
+        "${workspaceFolder}\\FloatUtils.cpp",
         "-o",
         "${fileDirname}\\${fileBasenameNoExtension}.exe",
         "-I${workspaceFolder}\\include",

@@ -12,8 +12,9 @@
 #include "include/Ghost.h"
 #include "include/Player.h"
 #include "include/PickUp.h"
+#include "include/Wall.h"
 
-std::vector<sf::RectangleShape> walls;
+std::vector<Wall> walls;
 std::vector<Ghost> ghosts;
 std::vector<PickUp> pickUps;
 
@@ -59,7 +60,7 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
                 wall.setOutlineColor(sf::Color(33, 33, 222));
                 wall.setOutlineThickness(0.20f);
                 wall.setPosition(x, y);
-                walls.push_back(wall);
+                walls.push_back({CellType::WALL, wall});
                 break;
             }
             case CellType::GHOST_DOOR:
@@ -69,7 +70,7 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
                 ghostDoor.setOrigin(ghostDoor.getSize().x / 2.0f, ghostDoor.getSize().y / 2.0f);
                 ghostDoor.setFillColor(sf::Color(100, 41, 71));
                 ghostDoor.setPosition(x, y);
-                walls.push_back(ghostDoor);
+                walls.push_back({CellType::GHOST_DOOR, ghostDoor});
                 break;
             }
             case CellType::PELLET:
@@ -154,13 +155,13 @@ int main()
 
     // Get min/max x coordinate for the "teleport" tunnel
     auto [minWall, maxWall] = std::minmax_element(walls.begin(), walls.end(),
-                                                  [](const sf::RectangleShape &a, const sf::RectangleShape &b)
+                                                  [](const Wall &a, const Wall &b)
                                                   {
-                                                      return a.getPosition().x < b.getPosition().x;
+                                                      return a.shape.getPosition().x < b.shape.getPosition().x;
                                                   });
 
-    float minX = minWall->getPosition().x;
-    float maxX = maxWall->getPosition().x;
+    float minX = minWall->shape.getPosition().x;
+    float maxX = maxWall->shape.getPosition().x;
 
     // Game state
     bool isPreGame = true;
@@ -274,7 +275,7 @@ int main()
 
         for (auto &wall : walls)
         {
-            window.draw(wall);
+            window.draw(wall.shape);
         }
 
         for (auto &pu : pickUps)

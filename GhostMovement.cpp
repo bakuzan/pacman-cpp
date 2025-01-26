@@ -1,6 +1,7 @@
 #include "include/Constants.h"
 #include "include/Ghost.h"
 #include "include/GhostMovement.h"
+#include "include/Wall.h"
 
 GhostMovement::GhostMovement()
 {
@@ -12,7 +13,7 @@ GhostMovement::~GhostMovement()
     // Destructor
 }
 
-sf::Vector2f GhostMovement::GetTargetTile(GhostPersonality personality, GhostMode currentMode, const std::vector<sf::RectangleShape> &walls, const std::vector<Ghost> &ghosts, const Player &player, float deltaTime)
+sf::Vector2f GhostMovement::GetTargetTile(GhostPersonality personality, GhostMode currentMode, const std::vector<Wall> &walls, const std::vector<Ghost> &ghosts, const Player &player, float deltaTime)
 {
     switch (currentMode)
     {
@@ -48,14 +49,14 @@ sf::Vector2f GhostMovement::GetDirectionVector(Direction direction, float speed,
 
 // Private
 
-std::pair<float, float> GhostMovement::GetMaxXY(const std::vector<sf::RectangleShape> &walls)
+std::pair<float, float> GhostMovement::GetMaxXY(const std::vector<Wall> &walls)
 {
     float maxX = std::numeric_limits<float>::min();
     float maxY = std::numeric_limits<float>::min();
 
     for (const auto &wall : walls)
     {
-        sf::Vector2f position = wall.getPosition();
+        sf::Vector2f position = wall.shape.getPosition();
         maxX = std::max({maxX, position.x});
         maxY = std::max({maxY, position.y});
     }
@@ -83,7 +84,7 @@ sf::Vector2f GhostMovement::GetHousedTargetTile(GhostPersonality personality, co
                : sf::Vector2f(Constants::RIGHT_MOST_HOUSE_CELL);
 }
 
-sf::Vector2f GhostMovement::GetScatterTargetTile(GhostPersonality personality, const std::vector<sf::RectangleShape> &walls)
+sf::Vector2f GhostMovement::GetScatterTargetTile(GhostPersonality personality, const std::vector<Wall> &walls)
 {
     auto [maxX, maxY] = GetMaxXY(walls);
     switch (personality)
@@ -101,7 +102,7 @@ sf::Vector2f GhostMovement::GetScatterTargetTile(GhostPersonality personality, c
     }
 }
 
-sf::Vector2f GhostMovement::GetChaseTargetTile(GhostPersonality personality, const std::vector<sf::RectangleShape> &walls, const std::vector<Ghost> &ghosts, const Player &player, float deltaTime)
+sf::Vector2f GhostMovement::GetChaseTargetTile(GhostPersonality personality, const std::vector<Wall> &walls, const std::vector<Ghost> &ghosts, const Player &player, float deltaTime)
 {
     sf::Vector2f pacmanPosition = player.GetPosition();
     Direction pacmanDirection = player.GetDirection();

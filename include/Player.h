@@ -7,6 +7,7 @@
 
 #include "PlayerAnimation.h"
 #include "Direction.h"
+#include "Wall.h"
 
 class Player
 {
@@ -21,7 +22,7 @@ public:
     void Draw(sf::RenderWindow &window);
     void SetDirection(Direction newDirection);
     void SetPosition(float x, float y);
-    void Update(Direction newDirection, float deltaTime, const std::vector<sf::RectangleShape> &walls, float minX, float maxX);
+    void Update(Direction newDirection, float deltaTime, const std::vector<Wall> &walls, float minX, float maxX);
 
 private:
     sf::Texture &texture;

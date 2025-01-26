@@ -1,14 +1,16 @@
-#include <SFML/Graphics.hpp>
-
 #ifndef COLLIDER_H
 #define COLLIDER_H
+
+#include <SFML/Graphics.hpp>
+
+#include "Constants.h"
+#include "Wall.h"
 
 class Collider
 {
 public:
-    static bool CheckTileCollision(sf::Sprite spriteEntity, const std::vector<sf::RectangleShape> &walls, sf::Vector2f &collisionOffset)
+    static bool CheckTileCollision(sf::Sprite spriteEntity, const std::vector<Wall> &walls, sf::Vector2f &collisionOffset)
     {
-        float tolerance = 0.05f;
         sf::FloatRect spriteBounds = spriteEntity.getGlobalBounds();
         sf::FloatRect intersection;
 
@@ -16,12 +18,13 @@ public:
 
         for (const auto &wall : walls)
         {
-            sf::FloatRect wallBounds = wall.getGlobalBounds();
+            sf::FloatRect wallBounds = wall.shape.getGlobalBounds();
 
             // Check if the player bounds intersect with any wall
             if (spriteBounds.intersects(wallBounds, intersection))
             {
-                if (intersection.width < tolerance && intersection.height < tolerance)
+                if (intersection.width < Constants::COLLISION_TOLERANCE &&
+                    intersection.height < Constants::COLLISION_TOLERANCE)
                 {
                     continue;
                 }
