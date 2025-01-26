@@ -16,6 +16,7 @@
         "${workspaceFolder}\\GhostMovement.cpp",
         "${workspaceFolder}\\Ghost.cpp",
         "${workspaceFolder}\\FloatUtils.cpp",
+        "${workspaceFolder}\\EnumUtils.cpp",
         "-o",
         "${fileDirname}\\${fileBasenameNoExtension}.exe",
         "-I${workspaceFolder}\\include",

@@ -8,6 +8,8 @@
 #include "include/Player.h"
 #include "include/Wall.h"
 
+#include "include/EnumUtils.h"
+
 Ghost::Ghost(sf::Texture &sharedTexture, float spriteSize, int spriteSheetColumnIndex)
     : texture(sharedTexture), animation(&sharedTexture, 0.1f, spriteSheetColumnIndex)
 {
@@ -63,15 +65,19 @@ void Ghost::Update(float deltaTime, const std::vector<Wall> &walls, const std::v
 {
     GhostMode currentMode = mode->GetMode(personality);
     bool forceReverseDirection = mode->CheckForcedReverseQueue(personality);
+    bool justExitedTheHouse = lastKnownMode == GhostMode::LEAVING &&
+                              currentMode != GhostMode::LEAVING;
 
     sf::Vector2f currentPosition = sprite.getPosition();
     sf::Vector2f collisionOffset;
 
     sf::Vector2f targetPosition = GhostMovement::GetTargetTile(personality, currentMode, walls, ghosts, player, deltaTime);
-    Direction newDirection = DetermineDirection(deltaTime, walls, currentMode, lastKnownDirection, sprite, targetPosition, forceReverseDirection, collisionOffset);
-    sf::Vector2f newPosition = currentPosition + GhostMovement::GetDirectionVector(newDirection, speed, deltaTime);
+    Direction newDirection = justExitedTheHouse
+                                 ? Direction::LEFT
+                                 : DetermineDirection(deltaTime, walls, currentMode, lastKnownDirection, sprite, targetPosition, forceReverseDirection, collisionOffset);
 
     // Set position and offset for determined direction
+    sf::Vector2f newPosition = currentPosition + GhostMovement::GetDirectionVector(newDirection, speed, deltaTime);
     sprite.setPosition(newPosition);
     sprite.move(-collisionOffset);
 
@@ -91,6 +97,7 @@ void Ghost::Update(float deltaTime, const std::vector<Wall> &walls, const std::v
 
     // Update to new current values
     lastKnownDirection = newDirection;
+    lastKnownMode = currentMode;
 }
 
 void Ghost::SetPosition(float x, float y)
@@ -172,6 +179,18 @@ Direction Ghost::DetermineDirection(float deltaTime, const std::vector<Wall> &wa
             }
         }
     }
+
+    // TODO DEBUGGING REMOVE LATER
+    // if (personality == GhostPersonality::BLINKY &&
+    //     lastKnownDirection != selectedDirection)
+    // {
+    //     std::cout << "Change Direction !! "
+    //               << "previousDirection = "
+    //               << EnumUtils::DirectionToString(lastKnownDirection)
+    //               << ", selectedDirection = "
+    //               << EnumUtils::DirectionToString(selectedDirection)
+    //               << std::endl;
+    // }
 
     return selectedDirection;
 }

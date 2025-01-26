@@ -40,6 +40,7 @@ private:
     GhostModeController *mode;
 
     Direction lastKnownDirection;
+    GhostMode lastKnownMode;
 
 private:
     float CalculateDistance(sf::Vector2f a, sf::Vector2f b);
