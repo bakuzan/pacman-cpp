@@ -21,5 +21,5 @@ namespace Constants
         {LEFT, RIGHT},
         {RIGHT, LEFT}};
 
-    const float COLLISION_TOLERANCE = 0.05f;
+    const float COLLISION_TOLERANCE = 0.09f; // 0.05f;
 }
