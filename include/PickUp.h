@@ -1,10 +1,11 @@
 #pragma once
 
+#include <SFML/Graphics.hpp>
+
 #include "CellType.h"
 
 struct PickUp
 {
     CellType type;
-    float x;
-    float y;
+    sf::CircleShape shape;
 };

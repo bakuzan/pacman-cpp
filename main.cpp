@@ -75,12 +75,22 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
             }
             case CellType::PELLET:
             {
-                pickUps.push_back({CellType::PELLET, x, y});
+                float size = 0.1;
+                sf::CircleShape cs(size);
+                cs.setOrigin(size, size);
+                cs.setFillColor(sf::Color::White);
+                cs.setPosition(x, y);
+                pickUps.push_back({CellType::PELLET, cs});
                 break;
             }
             case CellType::POWER_UP:
             {
-                pickUps.push_back({CellType::POWER_UP, x, y});
+                float size = 0.4;
+                sf::CircleShape cs(size);
+                cs.setOrigin(size, size);
+                cs.setFillColor(sf::Color::White);
+                cs.setPosition(x, y);
+                pickUps.push_back({CellType::POWER_UP, cs});
                 break;
             }
             case CellType::GHOST_START_POSITION:
@@ -246,10 +256,11 @@ int main()
             int playerX = static_cast<int>(std::round(playerPos.x));
             int playerY = static_cast<int>(std::round(playerPos.y));
             pickUps.erase(std::remove_if(pickUps.begin(), pickUps.end(),
-                                         [&playerX, &playerY](const auto &pu)
+                                         [&playerX, &playerY](const PickUp &pu)
                                          {
-                                             if (playerX == pu.x &&
-                                                 playerY == pu.y)
+                                             auto puPos = pu.shape.getPosition();
+                                             if (playerX == puPos.x &&
+                                                 playerY == puPos.y)
                                              {
                                                  return true;
                                              }
@@ -280,15 +291,7 @@ int main()
 
         for (auto &pu : pickUps)
         {
-            float size = pu.type == CellType::POWER_UP
-                             ? 0.4
-                             : 0.1;
-
-            sf::CircleShape cs(size);
-            cs.setOrigin(size, size);
-            cs.setFillColor(sf::Color::White);
-            cs.setPosition(pu.x, pu.y);
-            window.draw(cs);
+            window.draw(pu.shape);
         }
 
         player.Draw(window);
