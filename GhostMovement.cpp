@@ -25,6 +25,7 @@ sf::Vector2f GhostMovement::GetTargetTile(GhostPersonality personality, GhostMod
         return GetScatterTargetTile(personality, walls);
     case GhostMode::CHASE:
         return GetChaseTargetTile(personality, walls, ghosts, player, deltaTime);
+    case GhostMode::FRIGHTENED:
     default:
         return sf::Vector2f();
     }
@@ -72,16 +73,16 @@ sf::Vector2f GhostMovement::GetHousedTargetTile(GhostPersonality personality, co
     auto direction = it->GetDirection();
     auto position = it->GetPosition();
 
-    if (direction == Direction::LEFT)
+    if (direction == Direction::UP)
     {
-        return position == Constants::LEFT_MOST_HOUSE_CELL
-                   ? sf::Vector2f(Constants::RIGHT_MOST_HOUSE_CELL)
-                   : sf::Vector2f(Constants::LEFT_MOST_HOUSE_CELL);
+        return position.y == Constants::HOUSE_CELL_LOWEST_Y
+                   ? sf::Vector2f(position.x, Constants::HOUSE_CELL_HIGHEST_Y)
+                   : sf::Vector2f(position.x, Constants::HOUSE_CELL_LOWEST_Y);
     }
 
-    return position == Constants::RIGHT_MOST_HOUSE_CELL
-               ? sf::Vector2f(Constants::LEFT_MOST_HOUSE_CELL)
-               : sf::Vector2f(Constants::RIGHT_MOST_HOUSE_CELL);
+    return position.y == Constants::HOUSE_CELL_HIGHEST_Y
+               ? sf::Vector2f(position.x, Constants::HOUSE_CELL_LOWEST_Y)
+               : sf::Vector2f(position.x, Constants::HOUSE_CELL_HIGHEST_Y);
 }
 
 sf::Vector2f GhostMovement::GetScatterTargetTile(GhostPersonality personality, const std::vector<Wall> &walls)

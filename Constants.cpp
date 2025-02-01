@@ -11,6 +11,8 @@ namespace Constants
     const float GRID_HEIGHT = 31.0f + GRID_OFFSET_Y;
     const float SPRITE_SIZE = 1.0f;
 
+    const float HOUSE_CELL_LOWEST_Y = GRID_OFFSET_Y + 13.0f;
+    const float HOUSE_CELL_HIGHEST_Y = GRID_OFFSET_Y + 15.0f;
     const sf::Vector2f LEFT_MOST_HOUSE_CELL = sf::Vector2f(12, GRID_OFFSET_Y + 14);
     const sf::Vector2f RIGHT_MOST_HOUSE_CELL = sf::Vector2f(17, GRID_OFFSET_Y + 14);
     const sf::Vector2f FIRST_OUTSIDE_CELL_LHS = sf::Vector2f(13, GRID_OFFSET_Y + 11);

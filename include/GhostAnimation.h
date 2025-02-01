@@ -1,9 +1,10 @@
+#ifndef GHOSTANIMATION_H
+#define GHOSTANIMATION_H
+
 #include <SFML/Graphics.hpp>
 
 #include "Direction.h"
-
-#ifndef GHOSTANIMATION_H
-#define GHOSTANIMATION_H
+#include "GhostMode.h"
 
 class GhostAnimation
 {
@@ -11,7 +12,7 @@ public:
     GhostAnimation(sf::Texture *texture, float switchTime, float columnIndex);
     ~GhostAnimation();
 
-    void Update(Direction direction, float deltaTime);
+    void Update(GhostMode mode, Direction direction, float frightTimeElapsed);
 
 public:
     sf::IntRect textureRect;

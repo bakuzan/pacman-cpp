@@ -1,4 +1,3 @@
-
 #include "include/GhostAnimation.h"
 
 GhostAnimation::GhostAnimation(sf::Texture *texture, float switchTime, float columnIndex)
@@ -18,23 +17,39 @@ GhostAnimation::~GhostAnimation()
     // Destructor
 }
 
-void GhostAnimation::Update(Direction direction, float deltaTime)
+void GhostAnimation::Update(GhostMode mode, Direction direction, float frightTimeElapsed)
 {
-    switch (direction)
+    if (mode != GhostMode::FRIGHTENED)
     {
-    case Direction::DOWN:
-        currentImage.y = 3;
-        break;
-    case Direction::LEFT:
-        currentImage.y = 4;
-        break;
-    case Direction::RIGHT:
-        currentImage.y = 5;
-        break;
-    case Direction::UP:
-    default:
-        currentImage.y = 2;
-        break;
+        switch (direction)
+        {
+        case Direction::DOWN:
+            currentImage.x = columnIndex;
+            currentImage.y = 3;
+            break;
+        case Direction::LEFT:
+            currentImage.x = columnIndex;
+            currentImage.y = 4;
+            break;
+        case Direction::RIGHT:
+            currentImage.x = columnIndex;
+            currentImage.y = 5;
+            break;
+        case Direction::UP:
+        default:
+            currentImage.x = columnIndex;
+            currentImage.y = 2;
+            break;
+        }
+    }
+    else
+    {
+        currentImage.x = 5;
+        currentImage.y = frightTimeElapsed < 4.0f
+                             ? 2
+                         : currentImage.y != 2
+                             ? 2
+                             : 3;
     }
 
     textureRect.top = currentImage.y * textureRect.height;

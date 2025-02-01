@@ -14,6 +14,8 @@ namespace Constants
     extern const float GRID_HEIGHT;
     extern const float SPRITE_SIZE;
 
+    extern const float HOUSE_CELL_LOWEST_Y;
+    extern const float HOUSE_CELL_HIGHEST_Y;
     extern const sf::Vector2f LEFT_MOST_HOUSE_CELL;
     extern const sf::Vector2f RIGHT_MOST_HOUSE_CELL;
     extern const sf::Vector2f FIRST_OUTSIDE_CELL_LHS;

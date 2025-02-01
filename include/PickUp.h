@@ -8,4 +8,5 @@ struct PickUp
 {
     CellType type;
     sf::CircleShape shape;
+    bool show;
 };

@@ -5,7 +5,7 @@
 
 #include "include/FloatUtils.h"
 
-GhostModeController::GhostModeController() : mode(GhostMode::SCATTER), timer(0), timeLimit(7)
+GhostModeController::GhostModeController() : mode(GhostMode::SCATTER), timer(0), timeLimit(7), frightenedTimer(0), frightenedTimeLimit(0)
 {
     for (int i = BLINKY; i <= CLYDE; ++i)
     {
@@ -25,10 +25,21 @@ GhostModeController *GhostModeController::GetInstance()
 
 GhostMode GhostModeController::GetMode(GhostPersonality personality)
 {
-    auto it = overrideModeMap.find(personality);
-    if (it != overrideModeMap.end())
+    auto fit = frightenedModeMap.find(personality);
+    if (fit != frightenedModeMap.end())
     {
-        return it->second;
+        return fit->second;
+    }
+
+    return GetModeIgnoringFrightened(personality);
+}
+
+GhostMode GhostModeController::GetModeIgnoringFrightened(GhostPersonality personality)
+{
+    auto oit = overrideModeMap.find(personality);
+    if (oit != overrideModeMap.end())
+    {
+        return oit->second;
     }
 
     return mode;
@@ -37,16 +48,30 @@ GhostMode GhostModeController::GetMode(GhostPersonality personality)
 void GhostModeController::Update(float deltaTime, const std::vector<Ghost> &ghosts)
 {
     // Manage global mode
-    timer += deltaTime;
-    if (timer >= timeLimit)
+    if (frightenedTimeLimit == 0)
     {
-        if (mode == GhostMode::SCATTER)
+        timer += deltaTime;
+        if (timer >= timeLimit)
         {
-            Chase();
+            if (mode == GhostMode::SCATTER)
+            {
+                Chase();
+            }
+            else
+            {
+                Scatter();
+            }
         }
-        else
+    }
+    // Manage frightened mode
+    else
+    {
+        frightenedTimer += deltaTime;
+        if (frightenedTimer >= frightenedTimeLimit)
         {
-            Scatter();
+            frightenedTimeLimit = 0;
+            frightenedTimer = 0;
+            frightenedModeMap.clear();
         }
     }
 
@@ -74,8 +99,7 @@ void GhostModeController::Update(float deltaTime, const std::vector<Ghost> &ghos
             }
             break;
         }
-        case GhostMode::FRIGHTENED: // TODO
-        case GhostMode::SPAWN:      // TODO
+        case GhostMode::SPAWN: // TODO
         default:
             break;
         }
@@ -95,6 +119,29 @@ bool GhostModeController::CheckForcedReverseQueue(GhostPersonality personality)
     }
 
     return false;
+}
+
+void GhostModeController::StartFrightened()
+{
+    frightenedTimeLimit = 6;
+    frightenedTimer = 0;
+
+    for (int i = BLINKY; i <= CLYDE; ++i)
+    {
+        GhostPersonality personality = static_cast<GhostPersonality>(i);
+        frightenedModeMap[personality] = GhostMode::FRIGHTENED;
+    }
+}
+
+float GhostModeController::GetFrightenedTimer()
+{
+    return frightenedTimer;
+}
+
+void GhostModeController::Eaten(GhostPersonality personality)
+{
+    frightenedModeMap.erase(personality);
+    overrideModeMap[personality] = GhostMode::SPAWN;
 }
 
 // Private

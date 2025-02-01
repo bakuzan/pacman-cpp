@@ -80,7 +80,7 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
                 cs.setOrigin(size, size);
                 cs.setFillColor(sf::Color::White);
                 cs.setPosition(x, y);
-                pickUps.push_back({CellType::PELLET, cs});
+                pickUps.push_back({CellType::PELLET, cs, true});
                 break;
             }
             case CellType::POWER_UP:
@@ -90,7 +90,7 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
                 cs.setOrigin(size, size);
                 cs.setFillColor(sf::Color::White);
                 cs.setPosition(x, y);
-                pickUps.push_back({CellType::POWER_UP, cs});
+                pickUps.push_back({CellType::POWER_UP, cs, true});
                 break;
             }
             case CellType::GHOST_START_POSITION:
@@ -122,6 +122,7 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
 
 int main()
 {
+    std::srand(std::time(0));
     sf::RenderWindow window(sf::VideoMode(Constants::WINDOW_SIZE, Constants::WINDOW_SIZE), "Pacman C++", sf::Style::Close | sf::Style::Resize);
     sf::View view(sf::Vector2f(0.0f, 0.0f), sf::Vector2f(Constants::GRID_WIDTH, Constants::GRID_HEIGHT));
     view.setCenter(Constants::GRID_WIDTH / 2.0f, Constants::GRID_HEIGHT / 2.0f);
@@ -240,34 +241,56 @@ int main()
         // Logic
         if (!isPreGame)
         {
-            player.Update(newDirection, deltaTime, walls, minX, maxX);
-
+            // Tick ghost modes
             ghostModeController->Update(deltaTime, ghosts);
 
-            for (auto &gst : ghosts)
-            {
-                gst.Update(deltaTime, walls, ghosts, player, minX, maxX);
-            }
+            // Advance player
+            player.Update(newDirection, deltaTime, walls, minX, maxX);
 
-            // Did the ghosts get pacman?
-            // TODO
-
-            // Eat pellets?
+            // Did we eat pellets?
             sf::Vector2f playerPos = player.GetPosition();
             int playerX = static_cast<int>(std::round(playerPos.x));
             int playerY = static_cast<int>(std::round(playerPos.y));
-            pickUps.erase(std::remove_if(pickUps.begin(), pickUps.end(),
-                                         [&playerX, &playerY](const PickUp &pu)
-                                         {
-                                             auto puPos = pu.shape.getPosition();
-                                             if (playerX == puPos.x &&
-                                                 playerY == puPos.y)
-                                             {
-                                                 return true;
-                                             }
-                                             return false;
-                                         }),
-                          pickUps.end());
+            for (auto &pu : pickUps)
+            {
+                auto puPos = pu.shape.getPosition();
+                if (playerX == puPos.x &&
+                    playerY == puPos.y)
+                {
+                    pu.show = false;
+
+                    if (pu.type == CellType::POWER_UP)
+                    {
+                        ghostModeController->StartFrightened();
+                    }
+                }
+            }
+
+            // Advance ghosts
+            sf::FloatRect playerRect(playerPos, sf::Vector2f(Constants::SPRITE_SIZE, Constants::SPRITE_SIZE));
+            for (auto &gst : ghosts)
+            {
+                gst.Update(deltaTime, walls, ghosts, player, minX, maxX);
+
+                // Did the ghosts get pacman? Or did pacman get frightened ghosts?
+                sf::Vector2f ghostPos = gst.GetPosition();
+                sf::FloatRect ghostRect(ghostPos, sf::Vector2f(Constants::SPRITE_SIZE, Constants::SPRITE_SIZE));
+
+                if (ghostRect.intersects(playerRect))
+                {
+                    GhostPersonality ghostPersonality = gst.GetPersonality();
+                    GhostMode ghostMode = ghostModeController->GetMode(ghostPersonality);
+                    if (ghostMode != GhostMode::FRIGHTENED)
+                    {
+                        ghostModeController->Eaten(ghostPersonality);
+                    }
+                    else
+                    {
+                        // TODO
+                        // Implement the ghost getting pacman!
+                    }
+                }
+            }
         }
 
         // Draw+Display
@@ -292,7 +315,10 @@ int main()
 
         for (auto &pu : pickUps)
         {
-            window.draw(pu.shape);
+            if (pu.show)
+            {
+                window.draw(pu.shape);
+            }
         }
 
         player.Draw(window);

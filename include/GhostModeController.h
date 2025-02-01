@@ -13,15 +13,24 @@ public:
     static GhostModeController *GetInstance();
 
     GhostMode GetMode(GhostPersonality personality);
+    GhostMode GetModeIgnoringFrightened(GhostPersonality personality);
+    float GetFrightenedTimer();
     bool CheckForcedReverseQueue(GhostPersonality personality);
+    void StartFrightened();
+    void Eaten(GhostPersonality personality);
     void Update(float deltaTime, const std::vector<Ghost> &ghosts);
 
 private:
     std::map<GhostPersonality, GhostMode> overrideModeMap;
+    std::map<GhostPersonality, GhostMode> frightenedModeMap;
     std::map<GhostPersonality, bool> forceReverseAtNextPossibleMap;
     GhostMode mode;
+
     float timer;
     float timeLimit;
+
+    float frightenedTimer;
+    float frightenedTimeLimit;
 
 private:
     GhostModeController();
