@@ -96,13 +96,13 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
             case CellType::GHOST_START_POSITION:
             {
                 Ghost gst(sharedTexture, Constants::SPRITE_SIZE, ghostColumnIndex++);
-                gst.SetPosition(x, y);
+                gst.SetSpawnPosition(x, y);
                 ghosts.push_back(gst);
                 break;
             }
             case CellType::PACMAN_START_POSITION:
             {
-                player.SetPosition(x, y);
+                player.SetSpawnPosition(x, y);
                 break;
             }
             case CellType::NOTHING:
@@ -255,7 +255,8 @@ int main()
             {
                 auto puPos = pu.shape.getPosition();
                 if (playerX == puPos.x &&
-                    playerY == puPos.y)
+                    playerY == puPos.y &&
+                    pu.show)
                 {
                     pu.show = false;
 
@@ -280,7 +281,7 @@ int main()
                 {
                     GhostPersonality ghostPersonality = gst.GetPersonality();
                     GhostMode ghostMode = ghostModeController->GetMode(ghostPersonality);
-                    if (ghostMode != GhostMode::FRIGHTENED)
+                    if (ghostMode == GhostMode::FRIGHTENED)
                     {
                         ghostModeController->Eaten(ghostPersonality);
                     }

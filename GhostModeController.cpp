@@ -72,6 +72,7 @@ void GhostModeController::Update(float deltaTime, const std::vector<Ghost> &ghos
             frightenedTimeLimit = 0;
             frightenedTimer = 0;
             frightenedModeMap.clear();
+            std::cout << "FRIGHTENED END" << std::endl;
         }
     }
 
@@ -81,12 +82,14 @@ void GhostModeController::Update(float deltaTime, const std::vector<Ghost> &ghos
         switch (entry.second)
         {
         case GhostMode::HOUSED:
+        {
             // TODO Check if can now leave the house; do below if can
             // if (canLeaveHouse)
             // {
             //     overrideModeMap[entry.first] = GhostMode::LEAVING;
             // }
             break;
+        }
         case GhostMode::LEAVING:
         {
             auto it = std::find_if(ghosts.cbegin(), ghosts.cend(), [&entry](const Ghost &ghost)
@@ -99,7 +102,18 @@ void GhostModeController::Update(float deltaTime, const std::vector<Ghost> &ghos
             }
             break;
         }
-        case GhostMode::SPAWN: // TODO
+        case GhostMode::SPAWN:
+        {
+            auto it = std::find_if(ghosts.cbegin(), ghosts.cend(), [&entry](const Ghost &ghost)
+                                   { return ghost.GetPersonality() == entry.first; });
+
+            sf::Vector2f spawnPosition = it->GetSpawnPosition();
+            sf::Vector2f position = it->GetPosition();
+            if (FloatUtils::arePositionsEqual(position, spawnPosition, Constants::COLLISION_TOLERANCE))
+            {
+                overrideModeMap[entry.first] = GhostMode::LEAVING;
+            }
+        }
         default:
             break;
         }
@@ -131,6 +145,7 @@ void GhostModeController::StartFrightened()
         GhostPersonality personality = static_cast<GhostPersonality>(i);
         frightenedModeMap[personality] = GhostMode::FRIGHTENED;
     }
+    std::cout << "FRIGHTENED START" << std::endl;
 }
 
 float GhostModeController::GetFrightenedTimer()
@@ -142,6 +157,10 @@ void GhostModeController::Eaten(GhostPersonality personality)
 {
     frightenedModeMap.erase(personality);
     overrideModeMap[personality] = GhostMode::SPAWN;
+    std::cout << "Ghost("
+              << personality
+              << ") Eaten, returning to Spawn"
+              << std::endl;
 }
 
 // Private

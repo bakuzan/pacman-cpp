@@ -31,6 +31,8 @@ private:
     static sf::Vector2f GetScatterTargetTile(GhostPersonality personality, const std::vector<Wall> &walls);
 
     static sf::Vector2f GetChaseTargetTile(GhostPersonality personality, const std::vector<Wall> &walls, const std::vector<Ghost> &ghosts, const Player &player, float deltaTime);
+
+    static sf::Vector2f GetSpawnTargetTile(GhostPersonality personality, const std::vector<Ghost> &ghosts);
 };
 
 #endif // GHOSTMOVEMENT_H

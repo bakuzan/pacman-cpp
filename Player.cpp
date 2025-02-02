@@ -118,9 +118,10 @@ void Player::SetDirection(Direction newDirection)
     direction = newDirection;
 }
 
-void Player::SetPosition(float x, float y)
+void Player::SetSpawnPosition(float x, float y)
 {
     sprite.setPosition(x, y);
+    spawnPosition = sf::Vector2f(x, y);
 }
 
 void Player::Draw(sf::RenderWindow &window)

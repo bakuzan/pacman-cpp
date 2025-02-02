@@ -1,10 +1,10 @@
 #include "include/GhostAnimation.h"
 
-GhostAnimation::GhostAnimation(sf::Texture *texture, float switchTime, float columnIndex)
+GhostAnimation::GhostAnimation(sf::Texture *texture, float blinkInterval, float columnIndex)
     : columnIndex(columnIndex), defaultRect(columnIndex * 32, 64, 32, 32)
 {
-    this->switchTime = switchTime;
-    this->totalTime = 0.0f;
+    this->blinkInterval = blinkInterval;
+    this->blinkTimeElapsed = 0.0f;
 
     currentImage.x = columnIndex;
     currentImage.y = 2;
@@ -17,41 +17,59 @@ GhostAnimation::~GhostAnimation()
     // Destructor
 }
 
-void GhostAnimation::Update(GhostMode mode, Direction direction, float frightTimeElapsed)
+void GhostAnimation::Update(GhostMode mode, Direction direction, float deltaTime, float frightTimeElapsed)
 {
-    if (mode != GhostMode::FRIGHTENED)
+    if (mode == GhostMode::FRIGHTENED)
     {
+        UpdateFrightenedSprite(deltaTime, frightTimeElapsed);
+    }
+    else
+    {
+        blinkTimeElapsed = 0.0f; // Ensure is 0 for next frightened run.
+
+        currentImage.x = mode != GhostMode::SPAWN
+                             ? columnIndex
+                             : 4;
+
         switch (direction)
         {
         case Direction::DOWN:
-            currentImage.x = columnIndex;
             currentImage.y = 3;
             break;
         case Direction::LEFT:
-            currentImage.x = columnIndex;
             currentImage.y = 4;
             break;
         case Direction::RIGHT:
-            currentImage.x = columnIndex;
             currentImage.y = 5;
             break;
         case Direction::UP:
         default:
-            currentImage.x = columnIndex;
             currentImage.y = 2;
             break;
         }
     }
-    else
-    {
-        currentImage.x = 5;
-        currentImage.y = frightTimeElapsed < 4.0f
-                             ? 2
-                         : currentImage.y != 2
-                             ? 2
-                             : 3;
-    }
 
     textureRect.top = currentImage.y * textureRect.height;
     textureRect.left = currentImage.x * textureRect.width;
+}
+
+// Private
+void GhostAnimation::UpdateFrightenedSprite(float deltaTime, float frightTimeElapsed)
+{
+    currentImage.x = 5;
+
+    if (frightTimeElapsed < (4.0f - blinkInterval))
+    {
+        currentImage.y = 2;
+    }
+    else
+    {
+        blinkTimeElapsed += deltaTime;
+
+        if (blinkTimeElapsed >= blinkInterval)
+        {
+            blinkTimeElapsed = 0.0f;
+            currentImage.y = (currentImage.y == 2) ? 3 : 2;
+        }
+    }
 }

@@ -21,16 +21,19 @@ public:
 
     void Draw(sf::RenderWindow &window);
     void SetDirection(Direction newDirection);
-    void SetPosition(float x, float y);
+    void SetSpawnPosition(float x, float y);
     void Update(Direction newDirection, float deltaTime, const std::vector<Wall> &walls, float minX, float maxX);
 
 private:
     sf::Texture &texture;
     sf::Sprite sprite;
+    PlayerAnimation animation;
+
+    sf::Vector2f spawnPosition;
     float speed;
+
     sf::Vector2f velocity;
     Direction direction;
-    PlayerAnimation animation;
 
 private:
     void UpdateVelocity(Direction newDirection, float deltaTime);

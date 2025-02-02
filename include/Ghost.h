@@ -21,12 +21,13 @@ public:
     Ghost(sf::Texture &sharedTexture, float spriteSize, int spriteSheetColumnIndex);
     ~Ghost();
 
+    sf::Vector2f GetSpawnPosition() const;
     sf::Vector2f GetPosition() const;
     GhostPersonality GetPersonality() const;
     Direction GetDirection() const;
 
     void Draw(sf::RenderWindow &window);
-    void SetPosition(float x, float y);
+    void SetSpawnPosition(float x, float y);
     void Update(float deltaTime, const std::vector<Wall> &walls, const std::vector<Ghost> &ghosts, const Player &player, float minX, float maxX);
 
 private:
@@ -35,6 +36,7 @@ private:
     GhostAnimation animation;
 
     GhostPersonality personality;
+    sf::Vector2f spawnPosition;
     float speed;
 
     GhostModeController *mode;
@@ -44,7 +46,7 @@ private:
 
 private:
     float CalculateDistance(sf::Vector2f a, sf::Vector2f b);
-    Direction DetermineDirection(float deltaTime, const std::vector<Wall> &walls, GhostMode mode, Direction lastMovedDirection, sf::Sprite ghost, sf::Vector2f targetPosition, bool forceReverseDirection, sf::Vector2f &collisionOffset);
+    Direction DetermineDirection(float deltaTime, const std::vector<Wall> &walls, GhostMode mode, float movementSpeed, Direction lastMovedDirection, sf::Sprite ghost, sf::Vector2f targetPosition, bool forceReverseDirection, sf::Vector2f &collisionOffset);
     void ExcludeDirections(const GhostMode &mode, const Direction &lastMovedDirection, bool forceReverseDirection, std::vector<Direction> &directions);
     float GetMovementSpeed(GhostMode mode);
 

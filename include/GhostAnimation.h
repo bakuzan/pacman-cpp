@@ -9,10 +9,10 @@
 class GhostAnimation
 {
 public:
-    GhostAnimation(sf::Texture *texture, float switchTime, float columnIndex);
+    GhostAnimation(sf::Texture *texture, float blinkInterval, float columnIndex);
     ~GhostAnimation();
 
-    void Update(GhostMode mode, Direction direction, float frightTimeElapsed);
+    void Update(GhostMode mode, Direction direction, float deltaTime, float frightTimeElapsed);
 
 public:
     sf::IntRect textureRect;
@@ -22,8 +22,11 @@ private:
     int columnIndex;
     sf::Vector2u currentImage;
 
-    float totalTime;
-    float switchTime;
+    float blinkTimeElapsed;
+    float blinkInterval;
+
+private:
+    void UpdateFrightenedSprite(float deltaTime, float frightTimeElapsed);
 };
 
 #endif // GHOSTANIMATION_H

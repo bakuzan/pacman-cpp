@@ -1,4 +1,5 @@
 #include "include/Constants.h"
+#include "include/EnumUtils.h"
 #include "include/Ghost.h"
 #include "include/GhostMovement.h"
 #include "include/Wall.h"
@@ -25,6 +26,8 @@ sf::Vector2f GhostMovement::GetTargetTile(GhostPersonality personality, GhostMod
         return GetScatterTargetTile(personality, walls);
     case GhostMode::CHASE:
         return GetChaseTargetTile(personality, walls, ghosts, player, deltaTime);
+    case GhostMode::SPAWN:
+        return GetSpawnTargetTile(personality, ghosts);
     case GhostMode::FRIGHTENED:
     default:
         return sf::Vector2f();
@@ -75,12 +78,12 @@ sf::Vector2f GhostMovement::GetHousedTargetTile(GhostPersonality personality, co
 
     if (direction == Direction::UP)
     {
-        return position.y == Constants::HOUSE_CELL_LOWEST_Y
+        return position.y <= Constants::HOUSE_CELL_LOWEST_Y
                    ? sf::Vector2f(position.x, Constants::HOUSE_CELL_HIGHEST_Y)
                    : sf::Vector2f(position.x, Constants::HOUSE_CELL_LOWEST_Y);
     }
 
-    return position.y == Constants::HOUSE_CELL_HIGHEST_Y
+    return position.y >= Constants::HOUSE_CELL_HIGHEST_Y
                ? sf::Vector2f(position.x, Constants::HOUSE_CELL_LOWEST_Y)
                : sf::Vector2f(position.x, Constants::HOUSE_CELL_HIGHEST_Y);
 }
@@ -141,4 +144,12 @@ sf::Vector2f GhostMovement::GetChaseTargetTile(GhostPersonality personality, con
     default:
         return pacmanPosition;
     }
+}
+
+sf::Vector2f GhostMovement::GetSpawnTargetTile(GhostPersonality personality, const std::vector<Ghost> &ghosts)
+{
+    auto it = std::find_if(ghosts.cbegin(), ghosts.cend(), [&personality](const Ghost &ghost)
+                           { return ghost.GetPersonality() == personality; });
+
+    return it->GetSpawnPosition();
 }
