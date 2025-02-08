@@ -15,6 +15,7 @@ public:
     GhostMode GetMode(GhostPersonality personality);
     GhostMode GetModeIgnoringFrightened(GhostPersonality personality);
     float GetFrightenedTimer();
+    int GetFrightenedCount();
     bool CheckForcedReverseQueue(GhostPersonality personality);
     void StartFrightened();
     void Eaten(GhostPersonality personality);

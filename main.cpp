@@ -285,7 +285,8 @@ int main()
                     if (ghostMode == GhostMode::FRIGHTENED)
                     {
                         ghostModeController->Eaten(ghostPersonality);
-                        score += 200; // TODO 200,400,800,1600
+                        int frightenedGhosts = ghostModeController->GetFrightenedCount();
+                        score += std::pow(2, (4 - frightenedGhosts)) * 100;
                     }
                     else
                     {

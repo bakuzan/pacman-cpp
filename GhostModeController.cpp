@@ -153,6 +153,11 @@ float GhostModeController::GetFrightenedTimer()
     return frightenedTimer;
 }
 
+int GhostModeController::GetFrightenedCount()
+{
+    return frightenedModeMap.size();
+}
+
 void GhostModeController::Eaten(GhostPersonality personality)
 {
     frightenedModeMap.erase(personality);
