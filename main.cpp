@@ -12,6 +12,7 @@
 #include "include/Ghost.h"
 #include "include/Player.h"
 #include "include/PickUp.h"
+#include "include/TextManager.h"
 #include "include/Wall.h"
 
 std::vector<Wall> walls;
@@ -78,7 +79,7 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
                 float size = 0.1;
                 sf::CircleShape cs(size);
                 cs.setOrigin(size, size);
-                cs.setFillColor(sf::Color::White);
+                cs.setFillColor(sf::Color(255, 229, 180));
                 cs.setPosition(x, y);
                 pickUps.push_back({CellType::PELLET, cs, true});
                 break;
@@ -88,7 +89,7 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
                 float size = 0.4;
                 sf::CircleShape cs(size);
                 cs.setOrigin(size, size);
-                cs.setFillColor(sf::Color::White);
+                cs.setFillColor(sf::Color(255, 229, 180));
                 cs.setPosition(x, y);
                 pickUps.push_back({CellType::POWER_UP, cs, true});
                 break;
@@ -150,13 +151,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    sf::Text readyText;
-    readyText.setFont(font);
-    readyText.setString("READY!");
-    readyText.setCharacterSize(20);
-    readyText.setScale(1.0f / 30.0f, 1.0f / 30.0f);
-    readyText.setFillColor(sf::Color::Yellow);
-    readyText.setPosition(11.5f, 17.75f);
+    TextManager textManager(font);
 
     // Create player
     Player player = Player(sharedTexture, Constants::SPRITE_SIZE);
@@ -182,6 +177,7 @@ int main()
     float deltaTime = 0.0f;
     sf::Clock clock;
 
+    int score = 0;
     GhostModeController *ghostModeController = GhostModeController::GetInstance();
 
     while (window.isOpen())
@@ -263,6 +259,11 @@ int main()
                     if (pu.type == CellType::POWER_UP)
                     {
                         ghostModeController->StartFrightened();
+                        score += 50;
+                    }
+                    else
+                    {
+                        score += 10;
                     }
                 }
             }
@@ -284,6 +285,7 @@ int main()
                     if (ghostMode == GhostMode::FRIGHTENED)
                     {
                         ghostModeController->Eaten(ghostPersonality);
+                        score += 200; // TODO 200,400,800,1600
                     }
                     else
                     {
@@ -294,13 +296,17 @@ int main()
             }
         }
 
+        textManager.UpdateScoreText(score);
+
         // Draw+Display
         window.clear(sf::Color(31, 31, 31));
         window.setView(view);
 
+        textManager.Draw(window);
+
         if (isPreGame)
         {
-            window.draw(readyText);
+            textManager.DrawPreGame(window);
 
             if (readyClock.getElapsedTime().asSeconds() >= displayDuration)
             {

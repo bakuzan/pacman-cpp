@@ -1,9 +1,9 @@
+#ifndef PLAYERANIMATION_H
+#define PLAYERANIMATION_H
+
 #include <SFML/Graphics.hpp>
 
 #include "Direction.h"
-
-#ifndef PLAYERANIMATION_H
-#define PLAYERANIMATION_H
 
 class PlayerAnimation
 {

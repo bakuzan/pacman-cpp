@@ -17,6 +17,7 @@
         "${workspaceFolder}\\Ghost.cpp",
         "${workspaceFolder}\\FloatUtils.cpp",
         "${workspaceFolder}\\EnumUtils.cpp",
+        "${workspaceFolder}\\TextManager.cpp",
         "-o",
         "${fileDirname}\\${fileBasenameNoExtension}.exe",
         "-I${workspaceFolder}\\include",

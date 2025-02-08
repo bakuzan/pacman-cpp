@@ -6,7 +6,7 @@
 namespace Constants
 {
     const float WINDOW_SIZE = 512.0f;
-    const float GRID_OFFSET_Y = 1.0f;
+    const float GRID_OFFSET_Y = 3.0f;
     const float GRID_WIDTH = 29.0f;
     const float GRID_HEIGHT = 31.0f + GRID_OFFSET_Y;
     const float SPRITE_SIZE = 1.0f;
