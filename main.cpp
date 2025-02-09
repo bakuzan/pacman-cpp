@@ -5,12 +5,14 @@
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
+#include <optional>
 #include <sstream>
 #include <thread>
 #include <vector>
 
 #include "include/Constants.h"
 #include "include/CellType.h"
+#include "include/EnumUtils.h"
 #include "include/Ghost.h"
 #include "include/Player.h"
 #include "include/PickUp.h"
@@ -170,11 +172,15 @@ void DrawPacmanLives(sf::RenderWindow &window, int lives)
     }
 }
 
-void DrawGhosts(sf::RenderWindow &window)
+void DrawGhosts(sf::RenderWindow &window, std::optional<GhostPersonality> skipGhostPersonality = std::nullopt)
 {
     for (auto &gst : ghosts)
     {
-        gst.Draw(window);
+        if (!skipGhostPersonality.has_value() ||
+            gst.GetPersonality() != skipGhostPersonality.value())
+        {
+            gst.Draw(window);
+        }
     }
 }
 
@@ -351,15 +357,24 @@ int main()
 
                         GhostPersonality ghostPersonality = gst.GetPersonality();
                         GhostMode ghostMode = ghostModeController->GetMode(ghostPersonality);
+
                         if (ghostMode == GhostMode::FRIGHTENED)
                         {
                             ghostModeController->Eaten(ghostPersonality);
                             int frightenedGhosts = ghostModeController->GetFrightenedCount();
                             int gstPoints = std::pow(2, (4 - frightenedGhosts)) * 100;
                             score += gstPoints;
-                            // TODO hide eaten ghost, show gstPoints, pause 0.5s
+                            // Pause and show points earn for ghost!
+                            RefreshView(window, view);
+                            DrawMazeEnvironment(window);
+                            DrawPacmanLives(window, lives);
+                            textManager.Draw(window);
+                            DrawGhosts(window, ghostPersonality);
+                            textManager.DrawGhostScore(window, gstPoints, ghostPos);
+                            window.display();
+                            std::this_thread::sleep_for(std::chrono::milliseconds(1500));
                         }
-                        else
+                        else if (ghostMode != GhostMode::SPAWN)
                         {
                             RefreshView(window, view);
                             DrawMazeEnvironment(window);
@@ -367,6 +382,7 @@ int main()
                             textManager.Draw(window);
                             player.Draw(window);
                             DrawGhosts(window);
+                            window.display();
                             std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
                             bool isDying = true;

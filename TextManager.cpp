@@ -1,3 +1,4 @@
+#include <iostream>
 #include <iomanip> // For std::setw and std::setfill
 #include <sstream> // For std::stringstream
 #include <string>  // For std::to_string
@@ -39,6 +40,12 @@ void TextManager::DrawGameOver(sf::RenderWindow &window)
 {
     sf::Text gameOverText = GetGameOverText();
     window.draw(gameOverText);
+}
+
+void TextManager::DrawGhostScore(sf::RenderWindow &window, int ghostPoints, const sf::Vector2f &ghostPosition)
+{
+    sf::Text pointsText = GetGhostPointsText(ghostPoints, ghostPosition);
+    window.draw(pointsText);
 }
 
 // Private
@@ -84,6 +91,18 @@ sf::Text TextManager::GetGameOverText()
     gameOverText.setFillColor(sf::Color::Red);
     gameOverText.setPosition(10.5f, Constants::GRID_OFFSET_Y + 16.75f);
     return gameOverText;
+}
+
+sf::Text TextManager::GetGhostPointsText(int ghostPoints, const sf::Vector2f &position)
+{
+    sf::Text pointsText;
+    pointsText.setFont(font);
+    pointsText.setString(std::to_string(ghostPoints));
+    pointsText.setCharacterSize(18);
+    pointsText.setScale(1.0f / Constants::GRID_HEIGHT, 1.0f / Constants::GRID_HEIGHT);
+    pointsText.setFillColor(sf::Color::Cyan);
+    pointsText.setPosition(position);
+    return pointsText;
 }
 
 void TextManager::SetScale(sf::Text &text)
