@@ -170,6 +170,14 @@ void DrawPacmanLives(sf::RenderWindow &window, int lives)
     }
 }
 
+void DrawGhosts(sf::RenderWindow &window)
+{
+    for (auto &gst : ghosts)
+    {
+        gst.Draw(window);
+    }
+}
+
 int main()
 {
     std::srand(std::time(0));
@@ -332,8 +340,15 @@ int main()
                     sf::Vector2f ghostPos = gst.GetPosition();
                     sf::FloatRect ghostRect(ghostPos, sf::Vector2f(Constants::SPRITE_SIZE, Constants::SPRITE_SIZE));
 
-                    if (ghostRect.intersects(playerRect)) // TODO How to check intersect but by a certain level?
+                    sf::FloatRect intersection;
+                    if (ghostRect.intersects(playerRect, intersection))
                     {
+                        float intersectionArea = intersection.width * intersection.height;
+                        if (intersectionArea < 0.2f)
+                        {
+                            continue; // Ignoring overlaps that arent visible
+                        }
+
                         GhostPersonality ghostPersonality = gst.GetPersonality();
                         GhostMode ghostMode = ghostModeController->GetMode(ghostPersonality);
                         if (ghostMode == GhostMode::FRIGHTENED)
@@ -351,6 +366,7 @@ int main()
                             DrawPacmanLives(window, lives);
                             textManager.Draw(window);
                             player.Draw(window);
+                            DrawGhosts(window);
                             std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
                             bool isDying = true;
@@ -404,6 +420,8 @@ int main()
             DrawMazeEnvironment(window);
             DrawPacmanLives(window, lives);
             textManager.Draw(window);
+            player.Draw(window);
+            DrawGhosts(window);
 
             if (isPreGame)
             {
@@ -414,13 +432,6 @@ int main()
                     isPreGame = false;
                     player.SetDirection(Direction::LEFT);
                 }
-            }
-
-            player.Draw(window);
-
-            for (auto &gst : ghosts)
-            {
-                gst.Draw(window);
             }
         }
         else
