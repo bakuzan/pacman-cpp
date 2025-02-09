@@ -12,6 +12,7 @@ public:
     void UpdateScoreText(int score);
     void DrawPreGame(sf::RenderWindow &window);
     void Draw(sf::RenderWindow &window);
+    void DrawGameOver(sf::RenderWindow &window);
 
 private:
     sf::Font &font;
@@ -23,6 +24,7 @@ private:
     sf::Text GetReadyText();
     sf::Text GetScoreLabelText();
     sf::Text GetScoreText();
+    sf::Text GetGameOverText();
     void SetScale(sf::Text &text);
 
     std::string Pad(std::string str, int width, char c);

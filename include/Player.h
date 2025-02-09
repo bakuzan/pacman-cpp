@@ -23,6 +23,8 @@ public:
     void SetDirection(Direction newDirection);
     void SetSpawnPosition(float x, float y);
     void Update(Direction newDirection, float deltaTime, const std::vector<Wall> &walls, float minX, float maxX);
+    bool Dying();
+    void Reset();
 
 private:
     sf::Texture &texture;

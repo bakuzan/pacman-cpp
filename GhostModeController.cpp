@@ -168,6 +168,15 @@ void GhostModeController::Eaten(GhostPersonality personality)
               << std::endl;
 }
 
+void GhostModeController::ResetToHouse(GhostPersonality personality)
+{
+    auto it = overrideModeMap.find(personality);
+    if (it == overrideModeMap.end() || it->second != GhostMode::HOUSED)
+    {
+        overrideModeMap[personality] = GhostMode::LEAVING;
+    }
+}
+
 // Private
 
 void GhostModeController::Chase()

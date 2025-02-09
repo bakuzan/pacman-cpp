@@ -2,16 +2,9 @@
 #include "include/Direction.h"
 
 PlayerAnimation::PlayerAnimation(sf::Texture *texture, float switchTime)
-    : defaultRect(128, 0, 32, 32)
+    : switchTime(switchTime), defaultRect(128, 0, 32, 32)
 {
-    this->switchTime = switchTime;
-    this->totalTime = 0.0f;
-    this->returningToDefault = false;
-
-    currentImage.x = static_cast<unsigned int>(Direction::NONE);
-    currentImage.y = 0;
-
-    textureRect = defaultRect;
+    Init();
 }
 
 PlayerAnimation::~PlayerAnimation()
@@ -58,4 +51,38 @@ void PlayerAnimation::Update(Direction direction, float deltaTime)
             textureRect.left = currentImage.x * textureRect.width;
         }
     }
+}
+
+void PlayerAnimation::Reset()
+{
+    Init();
+}
+
+bool PlayerAnimation::NextDeathFrame()
+{
+    if (deathFrame > 10)
+    {
+        deathFrame = 0;
+    }
+
+    currentImage.x = deathFrame;
+
+    textureRect.top = 6 * textureRect.height;
+    textureRect.left = currentImage.x * textureRect.width;
+
+    deathFrame++;
+    return deathFrame <= 10;
+}
+
+// Private
+void PlayerAnimation::Init()
+{
+    this->totalTime = 0.0f;
+    this->returningToDefault = false;
+    this->deathFrame = 0;
+
+    currentImage.x = static_cast<unsigned int>(Direction::NONE);
+    currentImage.y = 0;
+
+    textureRect = defaultRect;
 }

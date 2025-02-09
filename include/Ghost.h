@@ -29,6 +29,7 @@ public:
     void Draw(sf::RenderWindow &window);
     void SetSpawnPosition(float x, float y);
     void Update(float deltaTime, const std::vector<Wall> &walls, const std::vector<Ghost> &ghosts, const Player &player, float minX, float maxX);
+    void Reset();
 
 private:
     sf::Texture texture;

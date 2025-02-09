@@ -18,6 +18,7 @@
         "${workspaceFolder}\\FloatUtils.cpp",
         "${workspaceFolder}\\EnumUtils.cpp",
         "${workspaceFolder}\\TextManager.cpp",
+        "${workspaceFolder}\\SFMLUtils.cpp",
         "-o",
         "${fileDirname}\\${fileBasenameNoExtension}.exe",
         "-I${workspaceFolder}\\include",

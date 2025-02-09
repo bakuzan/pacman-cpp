@@ -1,20 +1,19 @@
 #include "include/GhostAnimation.h"
 
 GhostAnimation::GhostAnimation(sf::Texture *texture, float blinkInterval, float columnIndex)
-    : columnIndex(columnIndex), defaultRect(columnIndex * 32, 64, 32, 32)
+    : blinkInterval(blinkInterval), columnIndex(columnIndex), defaultRect(columnIndex * 32, 64, 32, 32)
 {
-    this->blinkInterval = blinkInterval;
-    this->blinkTimeElapsed = 0.0f;
-
-    currentImage.x = columnIndex;
-    currentImage.y = 2;
-
-    textureRect = defaultRect;
+    Init();
 }
 
 GhostAnimation::~GhostAnimation()
 {
     // Destructor
+}
+
+void GhostAnimation::Reset()
+{
+    Init();
 }
 
 void GhostAnimation::Update(GhostMode mode, Direction direction, float deltaTime, float frightTimeElapsed)
@@ -54,6 +53,16 @@ void GhostAnimation::Update(GhostMode mode, Direction direction, float deltaTime
 }
 
 // Private
+void GhostAnimation::Init()
+{
+    this->blinkTimeElapsed = 0.0f;
+
+    currentImage.x = columnIndex;
+    currentImage.y = 2;
+
+    textureRect = defaultRect;
+}
+
 void GhostAnimation::UpdateFrightenedSprite(float deltaTime, float frightTimeElapsed)
 {
     currentImage.x = 5;

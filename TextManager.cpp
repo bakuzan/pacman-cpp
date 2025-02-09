@@ -35,6 +35,12 @@ void TextManager::Draw(sf::RenderWindow &window)
     window.draw(scoreText);
 }
 
+void TextManager::DrawGameOver(sf::RenderWindow &window)
+{
+    sf::Text gameOverText = GetGameOverText();
+    window.draw(gameOverText);
+}
+
 // Private
 sf::Text TextManager::GetReadyText()
 {
@@ -67,6 +73,17 @@ sf::Text TextManager::GetScoreText()
     scoreText.setFillColor(sf::Color::White);
     scoreText.setPosition(5.5f, 1.25f);
     return scoreText;
+}
+
+sf::Text TextManager::GetGameOverText()
+{
+    sf::Text gameOverText;
+    gameOverText.setFont(font);
+    gameOverText.setString("GAME   OVER");
+    SetScale(gameOverText);
+    gameOverText.setFillColor(sf::Color::Red);
+    gameOverText.setPosition(10.5f, Constants::GRID_OFFSET_Y + 16.75f);
+    return gameOverText;
 }
 
 void TextManager::SetScale(sf::Text &text)

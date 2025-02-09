@@ -8,6 +8,7 @@
 #include "include/GhostModeController.h"
 #include "include/GhostMovement.h"
 #include "include/Player.h"
+#include "include/SFMLUtils.h"
 #include "include/Wall.h"
 
 #include "include/EnumUtils.h"
@@ -16,16 +17,8 @@ Ghost::Ghost(sf::Texture &sharedTexture, float spriteSize, int spriteSheetColumn
     : texture(sharedTexture), animation(&sharedTexture, 0.2f, spriteSheetColumnIndex)
 {
     sprite.setTexture(sharedTexture);
-    sprite.setTextureRect(sf::IntRect(spriteSheetColumnIndex * 32, 64, 32, 32));
-
-    sf::FloatRect bounds = sprite.getLocalBounds();
-    float centreX = bounds.width / 2.0f;
-    float centreY = bounds.height / 2.0f;
-    sprite.setOrigin(centreX, centreY);
-
-    float scaleX = spriteSize / bounds.width;
-    float scaleY = spriteSize / bounds.height;
-    sprite.setScale(scaleX, scaleY);
+    sprite.setTextureRect(animation.defaultRect);
+    SFMLUtils::CenterOriginAndScale(sprite, spriteSize);
 
     personality = static_cast<GhostPersonality>(spriteSheetColumnIndex);
     speed = personality == GhostPersonality::BLINKY ||
@@ -123,6 +116,15 @@ void Ghost::SetSpawnPosition(float x, float y)
 void Ghost::Draw(sf::RenderWindow &window)
 {
     window.draw(sprite);
+}
+
+void Ghost::Reset()
+{
+    lastKnownDirection = Direction::NONE;
+    mode->ResetToHouse(personality);
+    animation.Reset();
+    sprite.setTextureRect(animation.defaultRect);
+    sprite.setPosition(spawnPosition);
 }
 
 // Private

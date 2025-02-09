@@ -13,6 +13,7 @@ public:
     ~GhostAnimation();
 
     void Update(GhostMode mode, Direction direction, float deltaTime, float frightTimeElapsed);
+    void Reset();
 
 public:
     sf::IntRect textureRect;
@@ -26,6 +27,7 @@ private:
     float blinkInterval;
 
 private:
+    void Init();
     void UpdateFrightenedSprite(float deltaTime, float frightTimeElapsed);
 };
 

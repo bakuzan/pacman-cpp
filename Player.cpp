@@ -4,6 +4,7 @@
 #include "include/Collider.h"
 #include "include/Direction.h"
 #include "include/Player.h"
+#include "include/SFMLUtils.h"
 #include "include/Wall.h"
 
 Player::Player(sf::Texture &sharedTexture, float spriteSize)
@@ -12,16 +13,8 @@ Player::Player(sf::Texture &sharedTexture, float spriteSize)
     this->direction = Direction::NONE;
 
     sprite.setTexture(sharedTexture);
-    sprite.setTextureRect(sf::IntRect(128, 0, 32, 32));
-
-    sf::FloatRect bounds = sprite.getLocalBounds();
-    float centreX = bounds.width / 2.0f;
-    float centreY = bounds.height / 2.0f;
-    sprite.setOrigin(centreX, centreY);
-
-    float scaleX = spriteSize / bounds.width;
-    float scaleY = spriteSize / bounds.height;
-    sprite.setScale(scaleX, scaleY);
+    sprite.setTextureRect(animation.defaultRect);
+    SFMLUtils::CenterOriginAndScale(sprite, spriteSize);
 }
 
 Player::~Player()
@@ -127,6 +120,21 @@ void Player::SetSpawnPosition(float x, float y)
 void Player::Draw(sf::RenderWindow &window)
 {
     window.draw(sprite);
+}
+
+bool Player::Dying()
+{
+    bool hasMoreFrames = animation.NextDeathFrame();
+    sprite.setTextureRect(animation.textureRect);
+    return hasMoreFrames;
+}
+
+void Player::Reset()
+{
+    direction = Direction::NONE;
+    animation.Reset();
+    sprite.setTextureRect(animation.defaultRect);
+    sprite.setPosition(spawnPosition);
 }
 
 // Private
