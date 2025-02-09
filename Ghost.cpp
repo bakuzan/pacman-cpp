@@ -77,7 +77,7 @@ void Ghost::Update(float deltaTime, const std::vector<Wall> &walls, const std::v
                              ? currentModeIgnoringFright
                              : currentMode;
 
-    float movementSpeed = GetMovementSpeed(currentMode);
+    float movementSpeed = GetMovementSpeed(currentMode, currentPosition, maxX);
     sf::Vector2f targetPosition = GhostMovement::GetTargetTile(personality, calcMode, walls, ghosts, player, deltaTime);
     Direction newDirection = justExitedTheHouse
                                  ? Direction::LEFT
@@ -267,7 +267,7 @@ bool Ghost::IsGhostDoor(const Wall &wall)
     return wall.type == CellType::GHOST_DOOR;
 }
 
-float Ghost::GetMovementSpeed(GhostMode mode)
+float Ghost::GetMovementSpeed(GhostMode mode, const sf::Vector2f &position, float maxX)
 {
     float multiplier = 1.0f; // Normal
 
@@ -278,6 +278,11 @@ float Ghost::GetMovementSpeed(GhostMode mode)
     else if (mode == GhostMode::SPAWN)
     {
         multiplier = 1.5f; // 50% increase
+    }
+    else if (position.y == Constants::GRID_OFFSET_Y + 14.0f &&
+             (position.x < 6.0f || position.x > maxX - 6.0f))
+    {
+        multiplier = 0.5f; // Half speed in tunnels
     }
 
     return speed * multiplier;

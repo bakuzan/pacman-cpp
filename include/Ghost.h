@@ -49,7 +49,7 @@ private:
     float CalculateDistance(sf::Vector2f a, sf::Vector2f b);
     Direction DetermineDirection(float deltaTime, const std::vector<Wall> &walls, GhostMode mode, float movementSpeed, Direction lastMovedDirection, sf::Sprite ghost, sf::Vector2f targetPosition, bool forceReverseDirection, sf::Vector2f &collisionOffset);
     void ExcludeDirections(const GhostMode &mode, const Direction &lastMovedDirection, bool forceReverseDirection, std::vector<Direction> &directions);
-    float GetMovementSpeed(GhostMode mode);
+    float GetMovementSpeed(GhostMode mode, const sf::Vector2f &position, float maxX);
 
     static bool IsGhostDoor(const Wall &wall);
 };
