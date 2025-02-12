@@ -19,6 +19,7 @@
         "${workspaceFolder}\\EnumUtils.cpp",
         "${workspaceFolder}\\TextManager.cpp",
         "${workspaceFolder}\\SFMLUtils.cpp",
+        "${workspaceFolder}\\Button.cpp",
         "-o",
         "${fileDirname}\\${fileBasenameNoExtension}.exe",
         "-I${workspaceFolder}\\include",

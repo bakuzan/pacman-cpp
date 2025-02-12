@@ -10,6 +10,7 @@
 #include <thread>
 #include <vector>
 
+#include "include/Button.h"
 #include "include/Constants.h"
 #include "include/CellType.h"
 #include "include/EnumUtils.h"
@@ -20,10 +21,26 @@
 #include "include/TextManager.h"
 #include "include/Wall.h"
 
+// Game State
+bool isInGame = false;
+bool isPreGame = true;
+bool isGameOver = false;
+
+float displayDuration = 3.0f;
+sf::Clock gameClock;
+
+float deltaTime = 0.0f;
+sf::Clock deltaClock;
+
+int score = 0;
+int lives = 3;
+
 std::vector<Wall> walls;
 std::vector<Ghost> ghosts;
 std::vector<PickUp> pickUps;
 std::vector<sf::Sprite> pacmanLives;
+
+// Game State END
 
 void writeToLogFile(const std::string &message)
 {
@@ -184,6 +201,33 @@ void DrawGhosts(sf::RenderWindow &window, std::optional<GhostPersonality> skipGh
     }
 }
 
+void InitialiseGame(Player &player, GhostModeController *ghostModeController)
+{
+    isInGame = true;
+    isPreGame = true;
+    isGameOver = false;
+
+    gameClock.restart();
+    deltaClock.restart();
+    deltaTime = 0.0f;
+
+    score = 0;
+    lives = 3;
+
+    player.Reset();
+
+    for (auto &gst : ghosts)
+    {
+        gst.Reset();
+        ghostModeController->ResetToHouse(gst.GetPersonality(), true);
+    }
+
+    for (auto &pus : pickUps)
+    {
+        pus.show = true;
+    }
+}
+
 int main()
 {
     std::srand(std::time(0));
@@ -215,10 +259,10 @@ int main()
         exit(EXIT_FAILURE);
     }
 
+    // Create managers, controllers, and player
     TextManager textManager(font);
-
-    // Create player
     Player player = Player(sharedTexture, Constants::SPRITE_SIZE);
+    GhostModeController *ghostModeController = GhostModeController::GetInstance();
 
     // Process map
     ReadAndProcessMap(sharedTexture, player);
@@ -233,23 +277,22 @@ int main()
     float minX = minWall->shape.getPosition().x;
     float maxX = maxWall->shape.getPosition().x;
 
-    // Game state
-    bool isPreGame = true;
-    float displayDuration = 3.0f;
-    sf::Clock gameClock;
+    // Menu
+    float btnWidth = 20.0f;
+    float btnHeight = 5.0f;
+    float btnX = Constants::GRID_WIDTH / 2.0f;
 
-    float deltaTime = 0.0f;
-    sf::Clock clock;
+    Button newGameButton(font, btnX, Constants::GRID_HEIGHT / 2.0f - btnHeight / 2.0f, btnWidth, btnHeight, "New Game", [&player, &ghostModeController]()
+                         { InitialiseGame(player, ghostModeController); });
+    Button quitButton(font, btnX, Constants::GRID_HEIGHT / 2.0f + btnHeight / 2.0f + 5.0f, btnWidth, btnHeight, "Quit", [&window]()
+                      { window.close(); });
 
-    int score = 0;
-    int lives = 3;
-    bool isGameOver = false;
-    GhostModeController *ghostModeController = GhostModeController::GetInstance();
+    // Menu END
 
     while (window.isOpen())
     {
         // Timing
-        deltaTime = clock.restart().asSeconds();
+        deltaTime = deltaClock.restart().asSeconds();
         float fpsLimit = 1.0f / 20.0f; // Lock fps
         if (deltaTime > fpsLimit)
         {
@@ -275,197 +318,214 @@ int main()
                 break;
             }
             }
+
+            sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+            newGameButton.HandleEvent(evnt, mousePos);
+            quitButton.HandleEvent(evnt, mousePos);
         }
 
-        if (!isGameOver)
+        if (isInGame)
         {
-            // Player Input
-            Direction newDirection = Direction::NONE;
-
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+            if (!isGameOver)
             {
-                newDirection = Direction::LEFT;
-            }
+                // Player Input
+                Direction newDirection = Direction::NONE;
 
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-            {
-                newDirection = Direction::RIGHT;
-            }
-
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-            {
-                newDirection = Direction::UP;
-            }
-
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-            {
-                newDirection = Direction::DOWN;
-            }
-
-            // Logic
-            if (!isPreGame)
-            {
-                // Tick ghost modes
-                ghostModeController->Update(deltaTime, ghosts);
-
-                // Advance player
-                player.Update(newDirection, deltaTime, walls, minX, maxX);
-
-                // Did we eat pellets?
-                sf::Vector2f playerPos = player.GetPosition();
-                int playerX = static_cast<int>(std::round(playerPos.x));
-                int playerY = static_cast<int>(std::round(playerPos.y));
-                for (auto &pu : pickUps)
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
                 {
-                    auto puPos = pu.shape.getPosition();
-                    if (playerX == puPos.x &&
-                        playerY == puPos.y &&
-                        pu.show)
-                    {
-                        pu.show = false;
-
-                        if (pu.type == CellType::POWER_UP)
-                        {
-                            ghostModeController->StartFrightened();
-                            score += 50;
-                        }
-                        else
-                        {
-                            score += 10;
-                        }
-                    }
+                    newDirection = Direction::LEFT;
                 }
 
-                // Advance ghosts
-                sf::FloatRect playerRect(playerPos, sf::Vector2f(Constants::SPRITE_SIZE, Constants::SPRITE_SIZE));
-                for (auto &gst : ghosts)
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
                 {
-                    gst.Update(deltaTime, walls, ghosts, player, minX, maxX);
+                    newDirection = Direction::RIGHT;
+                }
 
-                    // Did the ghosts get pacman? Or did pacman get frightened ghosts?
-                    sf::Vector2f ghostPos = gst.GetPosition();
-                    sf::FloatRect ghostRect(ghostPos, sf::Vector2f(Constants::SPRITE_SIZE, Constants::SPRITE_SIZE));
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+                {
+                    newDirection = Direction::UP;
+                }
 
-                    sf::FloatRect intersection;
-                    if (ghostRect.intersects(playerRect, intersection))
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+                {
+                    newDirection = Direction::DOWN;
+                }
+
+                // Logic
+                if (!isPreGame)
+                {
+                    // Tick ghost modes
+                    ghostModeController->Update(deltaTime, ghosts);
+
+                    // Advance player
+                    player.Update(newDirection, deltaTime, walls, minX, maxX);
+
+                    // Did we eat pellets?
+                    sf::Vector2f playerPos = player.GetPosition();
+                    int playerX = static_cast<int>(std::round(playerPos.x));
+                    int playerY = static_cast<int>(std::round(playerPos.y));
+                    for (auto &pu : pickUps)
                     {
-                        float intersectionArea = intersection.width * intersection.height;
-                        if (intersectionArea < 0.2f)
+                        auto puPos = pu.shape.getPosition();
+                        if (playerX == puPos.x &&
+                            playerY == puPos.y &&
+                            pu.show)
                         {
-                            continue; // Ignoring overlaps that arent visible
-                        }
+                            pu.show = false;
 
-                        GhostPersonality ghostPersonality = gst.GetPersonality();
-                        GhostMode ghostMode = ghostModeController->GetMode(ghostPersonality);
-
-                        if (ghostMode == GhostMode::FRIGHTENED)
-                        {
-                            ghostModeController->Eaten(ghostPersonality);
-                            int frightenedGhosts = ghostModeController->GetFrightenedCount();
-                            int gstPoints = std::pow(2, (4 - frightenedGhosts)) * 100;
-                            score += gstPoints;
-                            // Pause and show points earn for ghost!
-                            RefreshView(window, view);
-                            DrawMazeEnvironment(window);
-                            DrawPacmanLives(window, lives);
-                            textManager.Draw(window);
-                            DrawGhosts(window, ghostPersonality);
-                            textManager.DrawGhostScore(window, gstPoints, ghostPos);
-                            window.display();
-                            std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-                        }
-                        else if (ghostMode != GhostMode::SPAWN)
-                        {
-                            RefreshView(window, view);
-                            DrawMazeEnvironment(window);
-                            DrawPacmanLives(window, lives);
-                            textManager.Draw(window);
-                            player.Draw(window);
-                            DrawGhosts(window);
-                            window.display();
-                            std::this_thread::sleep_for(std::chrono::milliseconds(250));
-
-                            bool isDying = true;
-                            while (isDying)
+                            if (pu.type == CellType::POWER_UP)
                             {
-                                isDying = player.Dying();
+                                ghostModeController->StartFrightened();
+                                score += 50;
+                            }
+                            else
+                            {
+                                score += 10;
+                            }
+                        }
+                    }
 
+                    // Advance ghosts
+                    sf::FloatRect playerRect(playerPos, sf::Vector2f(Constants::SPRITE_SIZE, Constants::SPRITE_SIZE));
+                    for (auto &gst : ghosts)
+                    {
+                        gst.Update(deltaTime, walls, ghosts, player, minX, maxX);
+
+                        // Did the ghosts get pacman? Or did pacman get frightened ghosts?
+                        sf::Vector2f ghostPos = gst.GetPosition();
+                        sf::FloatRect ghostRect(ghostPos, sf::Vector2f(Constants::SPRITE_SIZE, Constants::SPRITE_SIZE));
+
+                        sf::FloatRect intersection;
+                        if (ghostRect.intersects(playerRect, intersection))
+                        {
+                            float intersectionArea = intersection.width * intersection.height;
+                            if (intersectionArea < 0.2f)
+                            {
+                                continue; // Ignoring overlaps that arent visible
+                            }
+
+                            GhostPersonality ghostPersonality = gst.GetPersonality();
+                            GhostMode ghostMode = ghostModeController->GetMode(ghostPersonality);
+
+                            if (ghostMode == GhostMode::FRIGHTENED)
+                            {
+                                ghostModeController->Eaten(ghostPersonality);
+                                int frightenedGhosts = ghostModeController->GetFrightenedCount();
+                                int gstPoints = std::pow(2, (4 - frightenedGhosts)) * 100;
+                                score += gstPoints;
+                                // Pause and show points earn for ghost!
+                                RefreshView(window, view);
+                                DrawMazeEnvironment(window);
+                                DrawPacmanLives(window, lives);
+                                textManager.Draw(window);
+                                DrawGhosts(window, ghostPersonality);
+                                textManager.DrawGhostScore(window, gstPoints, ghostPos);
+                                window.display();
+                                std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+                            }
+                            else if (ghostMode != GhostMode::SPAWN)
+                            {
                                 RefreshView(window, view);
                                 DrawMazeEnvironment(window);
                                 DrawPacmanLives(window, lives);
                                 textManager.Draw(window);
                                 player.Draw(window);
+                                DrawGhosts(window);
                                 window.display();
+                                std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
-                                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                            }
-
-                            lives--;
-                            if (lives == 0)
-                            {
-                                isGameOver = true;
-                                gameClock.restart();
-                            }
-                            else
-                            {
-                                player.Reset();
-
-                                for (auto &gst : ghosts)
+                                bool isDying = true;
+                                while (isDying)
                                 {
-                                    gst.Reset();
+                                    isDying = player.Dying();
+
+                                    RefreshView(window, view);
+                                    DrawMazeEnvironment(window);
+                                    DrawPacmanLives(window, lives);
+                                    textManager.Draw(window);
+                                    player.Draw(window);
+                                    window.display();
+
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                                 }
 
-                                isPreGame = true;
-                                gameClock.restart();
+                                lives--;
+                                if (lives == 0)
+                                {
+                                    isGameOver = true;
+                                    gameClock.restart();
+                                }
+                                else
+                                {
+                                    player.Reset();
+
+                                    for (auto &gst : ghosts)
+                                    {
+                                        gst.Reset();
+                                    }
+
+                                    isPreGame = true;
+                                    gameClock.restart();
+                                }
                             }
                         }
                     }
                 }
+
+                textManager.UpdateScoreText(score);
+
+                // if logic block caused game over, then no need to render for this loop
+                if (isGameOver)
+                {
+                    continue;
+                }
+
+                // Draw+Display
+                RefreshView(window, view);
+                DrawMazeEnvironment(window);
+                DrawPacmanLives(window, lives);
+                textManager.Draw(window);
+                player.Draw(window);
+                DrawGhosts(window);
+
+                if (isPreGame)
+                {
+                    textManager.DrawPreGame(window);
+
+                    if (gameClock.getElapsedTime().asSeconds() >= displayDuration)
+                    {
+                        isPreGame = false;
+                        player.SetDirection(Direction::LEFT);
+                    }
+                }
             }
-
-            textManager.UpdateScoreText(score);
-
-            // if logic block caused game over, then no need to render for this loop
-            if (isGameOver)
+            else
             {
-                continue;
-            }
-
-            // Draw+Display
-            RefreshView(window, view);
-            DrawMazeEnvironment(window);
-            DrawPacmanLives(window, lives);
-            textManager.Draw(window);
-            player.Draw(window);
-            DrawGhosts(window);
-
-            if (isPreGame)
-            {
-                textManager.DrawPreGame(window);
+                RefreshView(window, view);
+                DrawMazeEnvironment(window);
+                DrawPacmanLives(window, lives);
+                textManager.Draw(window);
+                textManager.DrawGameOver(window);
 
                 if (gameClock.getElapsedTime().asSeconds() >= displayDuration)
                 {
-                    isPreGame = false;
-                    player.SetDirection(Direction::LEFT);
+                    isInGame = false; // Will return user to "New Game" Menu
                 }
             }
+
+            // Display new window
+            window.display();
         }
         else
         {
             RefreshView(window, view);
-            DrawMazeEnvironment(window);
-            DrawPacmanLives(window, lives);
-            textManager.Draw(window);
-            textManager.DrawGameOver(window);
+            textManager.DrawMenuTitle(window);
+            newGameButton.Draw(window);
+            quitButton.Draw(window);
 
-            if (gameClock.getElapsedTime().asSeconds() >= displayDuration)
-            {
-                window.close();
-            }
+            // Display new window
+            window.display();
         }
-
-        // Display new window
-        window.display();
     }
 
     return 0;

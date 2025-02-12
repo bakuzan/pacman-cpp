@@ -8,6 +8,7 @@
 
 TextManager::TextManager(sf::Font &font) : font(font)
 {
+    menuTitle = GetMenuTitle();
     readyText = GetReadyText();
     scoreLabelText = GetScoreLabelText();
     scoreText = GetScoreText();
@@ -16,6 +17,11 @@ TextManager::TextManager(sf::Font &font) : font(font)
 TextManager::~TextManager()
 {
     // Destructor
+}
+
+void TextManager::DrawMenuTitle(sf::RenderWindow &window)
+{
+    window.draw(menuTitle);
 }
 
 void TextManager::UpdateScoreText(int score)
@@ -49,6 +55,19 @@ void TextManager::DrawGhostScore(sf::RenderWindow &window, int ghostPoints, cons
 }
 
 // Private
+sf::Text TextManager::GetMenuTitle()
+{
+    sf::Text menuTitleText;
+    menuTitleText.setFont(font);
+    menuTitleText.setString("PACMAN");
+    menuTitleText.setCharacterSize(40);
+    menuTitleText.setScale(4.0f / Constants::GRID_HEIGHT, 4.0f / Constants::GRID_HEIGHT);
+    menuTitleText.setFillColor(sf::Color::Yellow);
+    menuTitleText.setPosition(Constants::GRID_WIDTH / 2.0f, 5.0f);
+
+    return menuTitleText;
+}
+
 sf::Text TextManager::GetReadyText()
 {
     sf::Text readyText;

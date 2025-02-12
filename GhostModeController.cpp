@@ -168,12 +168,14 @@ void GhostModeController::Eaten(GhostPersonality personality)
               << std::endl;
 }
 
-void GhostModeController::ResetToHouse(GhostPersonality personality)
+void GhostModeController::ResetToHouse(GhostPersonality personality, bool isGameStart)
 {
     auto it = overrideModeMap.find(personality);
-    if (it == overrideModeMap.end() || it->second != GhostMode::HOUSED)
+    if (it == overrideModeMap.end() || it->second != GhostMode::HOUSED || isGameStart)
     {
-        overrideModeMap[personality] = GhostMode::LEAVING;
+        overrideModeMap[personality] = isGameStart && personality != GhostPersonality::BLINKY
+                                           ? GhostMode::HOUSED
+                                           : GhostMode::LEAVING;
     }
 }
 

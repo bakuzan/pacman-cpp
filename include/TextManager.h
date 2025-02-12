@@ -9,6 +9,8 @@ public:
     TextManager(sf::Font &font);
     ~TextManager();
 
+    void DrawMenuTitle(sf::RenderWindow &window);
+
     void UpdateScoreText(int score);
     void DrawPreGame(sf::RenderWindow &window);
     void Draw(sf::RenderWindow &window);
@@ -18,11 +20,13 @@ public:
 
 private:
     sf::Font &font;
+    sf::Text menuTitle;
     sf::Text readyText;
     sf::Text scoreLabelText;
     sf::Text scoreText;
 
 private:
+    sf::Text GetMenuTitle();
     sf::Text GetReadyText();
     sf::Text GetScoreLabelText();
     sf::Text GetScoreText();
