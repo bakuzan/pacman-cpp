@@ -11,13 +11,16 @@ public:
     ~Button();
 
     void Draw(sf::RenderWindow &window);
-    void HandleEvent(const sf::Event &event, sf::Vector2i mousePos);
+    void HandleEvent(const sf::Event &evnt, sf::Vector2i mousePos);
 
 private:
     sf::RectangleShape shape;
     sf::Text label;
     sf::Font font;
     std::function<void()> onClick;
+
+    sf::Color defaultColour;
+    sf::Color hoverColour;
 };
 
 #endif // BUTTON_H

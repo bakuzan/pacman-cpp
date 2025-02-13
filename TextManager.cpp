@@ -65,6 +65,10 @@ sf::Text TextManager::GetMenuTitle()
     menuTitleText.setFillColor(sf::Color::Yellow);
     menuTitleText.setPosition(Constants::GRID_WIDTH / 2.0f, 5.0f);
 
+    sf::FloatRect bounds = menuTitleText.getLocalBounds();
+    menuTitleText.setOrigin(bounds.width / 2.0f,
+                            bounds.height / 2.0f);
+
     return menuTitleText;
 }
 

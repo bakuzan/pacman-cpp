@@ -278,7 +278,7 @@ int main()
     float maxX = maxWall->shape.getPosition().x;
 
     // Menu
-    float btnWidth = 20.0f;
+    float btnWidth = 30.0f;
     float btnHeight = 5.0f;
     float btnX = Constants::GRID_WIDTH / 2.0f;
 
