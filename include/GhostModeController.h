@@ -20,7 +20,8 @@ public:
     void StartFrightened();
     void Eaten(GhostPersonality personality);
     void Update(float deltaTime, const std::vector<Ghost> &ghosts);
-    void ResetToHouse(GhostPersonality personality, bool isGameStart = false);
+    void ResetToHouse(GhostPersonality personality);
+    void Reset();
 
 private:
     std::map<GhostPersonality, GhostMode> overrideModeMap;
@@ -41,6 +42,7 @@ private:
     GhostModeController(const GhostModeController &) = delete;            // Prevent copy-construction
     GhostModeController &operator=(const GhostModeController &) = delete; // Prevent assignment
 
+    void Init();
     void Chase();
     void Scatter();
     void QueueForcedReverse();

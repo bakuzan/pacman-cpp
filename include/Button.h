@@ -11,7 +11,7 @@ public:
     ~Button();
 
     void Draw(sf::RenderWindow &window);
-    void HandleEvent(const sf::Event &evnt, sf::Vector2i mousePos);
+    void HandleEvent(const sf::Event &evnt, sf::Vector2f mousePos);
 
 private:
     sf::RectangleShape shape;

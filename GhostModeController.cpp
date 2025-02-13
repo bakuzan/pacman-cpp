@@ -7,14 +7,7 @@
 
 GhostModeController::GhostModeController() : mode(GhostMode::SCATTER), timer(0), timeLimit(7), frightenedTimer(0), frightenedTimeLimit(0)
 {
-    for (int i = BLINKY; i <= CLYDE; ++i)
-    {
-        GhostPersonality personality = static_cast<GhostPersonality>(i);
-        forceReverseAtNextPossibleMap[personality] = false;
-        overrideModeMap[personality] = personality == BLINKY
-                                           ? GhostMode::LEAVING
-                                           : GhostMode::HOUSED;
-    }
+    Init();
 }
 
 GhostModeController *GhostModeController::GetInstance()
@@ -168,18 +161,40 @@ void GhostModeController::Eaten(GhostPersonality personality)
               << std::endl;
 }
 
-void GhostModeController::ResetToHouse(GhostPersonality personality, bool isGameStart)
+void GhostModeController::ResetToHouse(GhostPersonality personality)
 {
     auto it = overrideModeMap.find(personality);
-    if (it == overrideModeMap.end() || it->second != GhostMode::HOUSED || isGameStart)
+    if (it == overrideModeMap.end() || it->second != GhostMode::HOUSED)
     {
-        overrideModeMap[personality] = isGameStart && personality != GhostPersonality::BLINKY
-                                           ? GhostMode::HOUSED
-                                           : GhostMode::LEAVING;
+        overrideModeMap[personality] = GhostMode::LEAVING;
     }
 }
 
+void GhostModeController::Reset()
+{
+    Init();
+}
+
 // Private
+
+void GhostModeController::Init()
+{
+    mode = GhostMode::SCATTER;
+    timer = 0;
+    timeLimit = 7;
+    frightenedTimer = 0;
+    frightenedTimeLimit = 0;
+    frightenedModeMap.clear();
+
+    for (int i = BLINKY; i <= CLYDE; ++i)
+    {
+        GhostPersonality personality = static_cast<GhostPersonality>(i);
+        forceReverseAtNextPossibleMap[personality] = false;
+        overrideModeMap[personality] = personality == BLINKY
+                                           ? GhostMode::LEAVING
+                                           : GhostMode::HOUSED;
+    }
+}
 
 void GhostModeController::Chase()
 {

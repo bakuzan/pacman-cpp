@@ -37,18 +37,18 @@ void Button::Draw(sf::RenderWindow &window)
     window.draw(label);
 }
 
-void Button::HandleEvent(const sf::Event &evnt, sf::Vector2i mousePos)
+void Button::HandleEvent(const sf::Event &evnt, sf::Vector2f mousePos)
 {
     if (evnt.type == sf::Event::MouseButtonPressed)
     {
-        if (shape.getGlobalBounds().contains(evnt.mouseButton.x, evnt.mouseButton.y))
+        if (shape.getGlobalBounds().contains(mousePos))
         {
             onClick();
         }
     }
 
     // Check hover state
-    if (shape.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePos)))
+    if (shape.getGlobalBounds().contains(mousePos))
     {
         shape.setOutlineColor(hoverColour);
         label.setFillColor(hoverColour);

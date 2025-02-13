@@ -14,6 +14,7 @@
 #include "include/Constants.h"
 #include "include/CellType.h"
 #include "include/EnumUtils.h"
+#include "include/GameStatus.h"
 #include "include/Ghost.h"
 #include "include/Player.h"
 #include "include/PickUp.h"
@@ -22,9 +23,7 @@
 #include "include/Wall.h"
 
 // Game State
-bool isInGame = false;
-bool isPreGame = true;
-bool isGameOver = false;
+GameStatus gameStatus = GameStatus::MENU;
 
 float displayDuration = 3.0f;
 sf::Clock gameClock;
@@ -203,9 +202,7 @@ void DrawGhosts(sf::RenderWindow &window, std::optional<GhostPersonality> skipGh
 
 void InitialiseGame(Player &player, GhostModeController *ghostModeController)
 {
-    isInGame = true;
-    isPreGame = true;
-    isGameOver = false;
+    gameStatus = GameStatus::PRE_GAME;
 
     gameClock.restart();
     deltaClock.restart();
@@ -215,11 +212,11 @@ void InitialiseGame(Player &player, GhostModeController *ghostModeController)
     lives = 3;
 
     player.Reset();
+    ghostModeController->Reset();
 
     for (auto &gst : ghosts)
     {
         gst.Reset();
-        ghostModeController->ResetToHouse(gst.GetPersonality(), true);
     }
 
     for (auto &pus : pickUps)
@@ -317,16 +314,46 @@ int main()
                 view.setSize(Constants::GRID_HEIGHT * aspectRatio, Constants::GRID_HEIGHT);
                 break;
             }
+            case sf::Event::KeyPressed:
+            {
+                if (evnt.key.code == sf::Keyboard::P)
+                {
+                    switch (gameStatus)
+                    {
+                    case GameStatus::IN_GAME:
+                        gameStatus = GameStatus::PAUSED;
+                        break;
+                    case GameStatus::PAUSED:
+                        gameStatus = GameStatus::IN_GAME;
+                        break;
+                    default:
+                        break;
+                    }
+                }
+                break;
+            }
             }
 
             sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-            newGameButton.HandleEvent(evnt, mousePos);
-            quitButton.HandleEvent(evnt, mousePos);
+            sf::Vector2f mousePosView = window.mapPixelToCoords(mousePos);
+
+            newGameButton.HandleEvent(evnt, mousePosView);
+            quitButton.HandleEvent(evnt, mousePosView);
         }
 
-        if (isInGame)
+        if (gameStatus == GameStatus::MENU)
         {
-            if (!isGameOver)
+            RefreshView(window, view);
+            textManager.DrawMenuTitle(window);
+            newGameButton.Draw(window);
+            quitButton.Draw(window);
+
+            // Display new window
+            window.display();
+        }
+        else
+        {
+            if (!(gameStatus == GameStatus::GAME_OVER))
             {
                 // Player Input
                 Direction newDirection = Direction::NONE;
@@ -352,7 +379,7 @@ int main()
                 }
 
                 // Logic
-                if (!isPreGame)
+                if (gameStatus == GameStatus::IN_GAME)
                 {
                     // Tick ghost modes
                     ghostModeController->Update(deltaTime, ghosts);
@@ -417,7 +444,7 @@ int main()
                                 RefreshView(window, view);
                                 DrawMazeEnvironment(window);
                                 DrawPacmanLives(window, lives);
-                                textManager.Draw(window);
+                                textManager.Draw(window, gameStatus);
                                 DrawGhosts(window, ghostPersonality);
                                 textManager.DrawGhostScore(window, gstPoints, ghostPos);
                                 window.display();
@@ -428,7 +455,7 @@ int main()
                                 RefreshView(window, view);
                                 DrawMazeEnvironment(window);
                                 DrawPacmanLives(window, lives);
-                                textManager.Draw(window);
+                                textManager.Draw(window, gameStatus);
                                 player.Draw(window);
                                 DrawGhosts(window);
                                 window.display();
@@ -442,7 +469,7 @@ int main()
                                     RefreshView(window, view);
                                     DrawMazeEnvironment(window);
                                     DrawPacmanLives(window, lives);
-                                    textManager.Draw(window);
+                                    textManager.Draw(window, gameStatus);
                                     player.Draw(window);
                                     window.display();
 
@@ -452,7 +479,7 @@ int main()
                                 lives--;
                                 if (lives == 0)
                                 {
-                                    isGameOver = true;
+                                    gameStatus = GameStatus::GAME_OVER;
                                     gameClock.restart();
                                 }
                                 else
@@ -464,7 +491,7 @@ int main()
                                         gst.Reset();
                                     }
 
-                                    isPreGame = true;
+                                    gameStatus = GameStatus::PRE_GAME;
                                     gameClock.restart();
                                 }
                             }
@@ -475,7 +502,7 @@ int main()
                 textManager.UpdateScoreText(score);
 
                 // if logic block caused game over, then no need to render for this loop
-                if (isGameOver)
+                if (gameStatus == GameStatus::GAME_OVER)
                 {
                     continue;
                 }
@@ -484,17 +511,17 @@ int main()
                 RefreshView(window, view);
                 DrawMazeEnvironment(window);
                 DrawPacmanLives(window, lives);
-                textManager.Draw(window);
+                textManager.Draw(window, gameStatus);
                 player.Draw(window);
                 DrawGhosts(window);
 
-                if (isPreGame)
+                if (gameStatus == GameStatus::PRE_GAME)
                 {
                     textManager.DrawPreGame(window);
 
                     if (gameClock.getElapsedTime().asSeconds() >= displayDuration)
                     {
-                        isPreGame = false;
+                        gameStatus = GameStatus::IN_GAME;
                         player.SetDirection(Direction::LEFT);
                     }
                 }
@@ -504,24 +531,14 @@ int main()
                 RefreshView(window, view);
                 DrawMazeEnvironment(window);
                 DrawPacmanLives(window, lives);
-                textManager.Draw(window);
+                textManager.Draw(window, gameStatus);
                 textManager.DrawGameOver(window);
 
                 if (gameClock.getElapsedTime().asSeconds() >= displayDuration)
                 {
-                    isInGame = false; // Will return user to "New Game" Menu
+                    gameStatus = GameStatus::MENU;
                 }
             }
-
-            // Display new window
-            window.display();
-        }
-        else
-        {
-            RefreshView(window, view);
-            textManager.DrawMenuTitle(window);
-            newGameButton.Draw(window);
-            quitButton.Draw(window);
 
             // Display new window
             window.display();

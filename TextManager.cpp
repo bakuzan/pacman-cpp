@@ -36,10 +36,15 @@ void TextManager::DrawPreGame(sf::RenderWindow &window)
     window.draw(readyText);
 }
 
-void TextManager::Draw(sf::RenderWindow &window)
+void TextManager::Draw(sf::RenderWindow &window, const GameStatus &gameStatus)
 {
     window.draw(scoreLabelText);
     window.draw(scoreText);
+
+    if (gameStatus == GameStatus::PAUSED)
+    {
+        DisplayPauseSymbol(window);
+    }
 }
 
 void TextManager::DrawGameOver(sf::RenderWindow &window)
@@ -126,6 +131,31 @@ sf::Text TextManager::GetGhostPointsText(int ghostPoints, const sf::Vector2f &po
     pointsText.setFillColor(sf::Color::Cyan);
     pointsText.setPosition(position);
     return pointsText;
+}
+
+void TextManager::DisplayPauseSymbol(sf::RenderWindow &window)
+{
+    float w = 2.0f;
+    float h = 1.5f;
+    float w2 = w / 5.0f;
+
+    float x = Constants::GRID_WIDTH - (w / 2.0f) - 1.5f;
+    float y = (h / 2.0f) + 0.5f;
+
+    sf::RectangleShape pauseSymbol;
+    pauseSymbol.setSize(sf::Vector2f(w, h));
+    pauseSymbol.setPosition(x, y);
+    pauseSymbol.setOrigin(w / 2.0f, h / 2.0f);
+    pauseSymbol.setFillColor(sf::Color::White);
+
+    sf::RectangleShape gap;
+    gap.setSize(sf::Vector2f(w2, h));
+    gap.setPosition(x, y);
+    gap.setOrigin(w2 / 2.0f, h / 2.0f);
+    gap.setFillColor(sf::Color(31, 31, 31));
+
+    window.draw(pauseSymbol);
+    window.draw(gap);
 }
 
 void TextManager::SetScale(sf::Text &text)
