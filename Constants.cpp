@@ -26,4 +26,6 @@ namespace Constants
         {RIGHT, LEFT}};
 
     const float COLLISION_TOLERANCE = 0.09f; // 0.05f;
+
+    const sf::Color WALL_COLOUR = sf::Color(33, 33, 222);
 }

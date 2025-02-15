@@ -2,6 +2,7 @@
 #define CONSTANTS_H
 
 #include <SFML/System/Vector2.hpp>
+#include <SFML/Graphics/Color.hpp>
 #include <unordered_map>
 
 #include "Direction.h"
@@ -23,6 +24,8 @@ namespace Constants
     extern const std::unordered_map<Direction, Direction> REVERSE_DIRECTION_MAP;
 
     extern const float COLLISION_TOLERANCE;
+
+    extern const sf::Color WALL_COLOUR;
 }
 
 #endif // CONSTANTS_H

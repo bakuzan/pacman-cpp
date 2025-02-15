@@ -79,7 +79,7 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
                 wall.setSize(sf::Vector2f(0.6f, 0.6f));
                 wall.setOrigin(wall.getSize().x / 2.0f, wall.getSize().y / 2.0f);
                 wall.setFillColor(sf::Color::Transparent);
-                wall.setOutlineColor(sf::Color(33, 33, 222));
+                wall.setOutlineColor(Constants::WALL_COLOUR);
                 wall.setOutlineThickness(0.20f);
                 wall.setPosition(x, y);
                 walls.push_back({CellType::WALL, wall});
@@ -160,10 +160,17 @@ void RefreshView(sf::RenderWindow &window, sf::View &view)
     window.setView(view);
 }
 
-void DrawMazeEnvironment(sf::RenderWindow &window)
+void DrawMazeEnvironment(sf::RenderWindow &window, std::optional<sf::Color> colour = std::nullopt)
 {
+    bool setWallColour = colour.has_value();
     for (auto &wall : walls)
     {
+        if (setWallColour &&
+            wall.type == CellType::WALL)
+        {
+            wall.shape.setOutlineColor(colour.value());
+        }
+
         window.draw(wall.shape);
     }
 
@@ -199,7 +206,30 @@ void DrawGhosts(sf::RenderWindow &window, std::optional<GhostPersonality> skipGh
     }
 }
 
-void InitialiseGame(Player &player, GhostModeController *ghostModeController)
+void FlashWalls(sf::RenderWindow &window, sf::View &view, TextManager &textManager)
+{
+    float duration = 2.5f;
+    float interval = 0.25f;
+    float startTime = gameClock.getElapsedTime().asSeconds();
+
+    while (gameClock.getElapsedTime().asSeconds() - startTime < duration)
+    {
+        float elapsed = gameClock.getElapsedTime().asSeconds() - startTime;
+        sf::Color colour = (static_cast<int>(elapsed / interval) % 2 == 0)
+                               ? sf::Color::White
+                               : Constants::WALL_COLOUR;
+
+        RefreshView(window, view);
+        DrawMazeEnvironment(window, colour);
+        DrawPacmanLives(window, lives);
+        textManager.Draw(window, gameStatus);
+        window.display();
+
+        sf::sleep(sf::milliseconds(50));
+    }
+}
+
+void InitialiseGame(Player &player, GhostModeController *ghostModeController, bool isNewGame = true)
 {
     gameStatus = GameStatus::PRE_GAME;
 
@@ -207,8 +237,11 @@ void InitialiseGame(Player &player, GhostModeController *ghostModeController)
     deltaClock.restart();
     deltaTime = 0.0f;
 
-    score = 0;
-    lives = 3;
+    if (isNewGame)
+    {
+        score = 0;
+        lives = 3;
+    }
 
     player.Reset();
     ghostModeController->Reset();
@@ -221,6 +254,14 @@ void InitialiseGame(Player &player, GhostModeController *ghostModeController)
     for (auto &pus : pickUps)
     {
         pus.show = true;
+    }
+
+    for (auto &wall : walls)
+    {
+        if (wall.type == CellType::WALL)
+        {
+            wall.shape.setOutlineColor(Constants::WALL_COLOUR);
+        }
     }
 }
 
@@ -409,6 +450,17 @@ int main()
                                 score += 10;
                             }
                         }
+                    }
+
+                    // Are all pellets eaten?
+                    bool allPelletsEaten = std::all_of(pickUps.cbegin(), pickUps.cend(),
+                                                       [](const auto &pu)
+                                                       { return !pu.show; });
+                    if (allPelletsEaten)
+                    {
+                        FlashWalls(window, view, textManager);
+                        InitialiseGame(player, ghostModeController, false);
+                        continue;
                     }
 
                     // Advance ghosts
