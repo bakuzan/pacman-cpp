@@ -7,5 +7,6 @@ enum GhostMode
     SCATTER,
     CHASE,
     FRIGHTENED,
-    SPAWN
+    SPAWN,
+    ENTERING
 };

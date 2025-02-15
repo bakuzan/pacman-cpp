@@ -74,7 +74,9 @@ void Ghost::Update(float deltaTime, const std::vector<Wall> &walls, const std::v
     sf::Vector2f collisionOffset;
 
     GhostMode calcMode = currentModeIgnoringFright == GhostMode::HOUSED ||
-                                 currentModeIgnoringFright == GhostMode::LEAVING
+                                 currentModeIgnoringFright == GhostMode::LEAVING ||
+                                 currentModeIgnoringFright == GhostMode::SPAWN ||
+                                 currentModeIgnoringFright == GhostMode::ENTERING
                              ? currentModeIgnoringFright
                              : currentMode;
 
@@ -100,7 +102,11 @@ void Ghost::Update(float deltaTime, const std::vector<Wall> &walls, const std::v
     }
 
     // Animate
-    animation.Update(currentMode, newDirection, deltaTime, mode->GetFrightenedTimer());
+    GhostMode visualMode = currentModeIgnoringFright == GhostMode::SPAWN ||
+                                   currentModeIgnoringFright == GhostMode::ENTERING
+                               ? currentModeIgnoringFright
+                               : currentMode;
+    animation.Update(visualMode, newDirection, deltaTime, mode->GetFrightenedTimer());
     sprite.setTextureRect(animation.textureRect);
 
     // Update to new current values
@@ -152,7 +158,7 @@ Direction Ghost::DetermineDirection(float deltaTime, const std::vector<Wall> &wa
 
     std::vector<Wall> filteredWalls(walls);
     if (mode == GhostMode::LEAVING ||
-        mode == GhostMode::SPAWN)
+        mode == GhostMode::ENTERING)
     {
         filteredWalls.erase(std::remove_if(filteredWalls.begin(), filteredWalls.end(),
                                            [](const Wall &wall)
@@ -243,6 +249,10 @@ void Ghost::ExcludeDirections(const GhostMode &mode, const Direction &lastMovedD
     {
         directions.erase(std::remove(directions.begin(), directions.end(), Direction::DOWN), directions.end());
     }
+    else if (mode == GhostMode::ENTERING)
+    {
+        directions.erase(std::remove(directions.begin(), directions.end(), Direction::UP), directions.end());
+    }
     else
     {
         // Exclude or Force reverse direction
@@ -276,7 +286,8 @@ float Ghost::GetMovementSpeed(GhostMode mode, const sf::Vector2f &position, floa
     {
         multiplier = 0.5f; // Half speed
     }
-    else if (mode == GhostMode::SPAWN)
+    else if (mode == GhostMode::SPAWN ||
+             mode == GhostMode::ENTERING)
     {
         multiplier = 1.5f; // 50% increase
     }

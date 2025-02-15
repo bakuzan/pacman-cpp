@@ -86,6 +86,7 @@ void GhostModeController::Update(float deltaTime, const std::vector<Ghost> &ghos
             break;
         }
         case GhostMode::LEAVING:
+        case GhostMode::SPAWN:
         {
             auto it = std::find_if(ghosts.cbegin(), ghosts.cend(), [&entry](const Ghost &ghost)
                                    { return ghost.GetPersonality() == entry.first; });
@@ -93,11 +94,18 @@ void GhostModeController::Update(float deltaTime, const std::vector<Ghost> &ghos
             sf::Vector2f position = it->GetPosition();
             if (FloatUtils::arePositionsEqual(position, Constants::FIRST_OUTSIDE_CELL_LHS, Constants::COLLISION_TOLERANCE))
             {
-                overrideModeMap.erase(entry.first);
+                if (entry.second == GhostMode::SPAWN)
+                {
+                    overrideModeMap[entry.first] = GhostMode::ENTERING;
+                }
+                else
+                {
+                    overrideModeMap.erase(entry.first);
+                }
             }
             break;
         }
-        case GhostMode::SPAWN:
+        case GhostMode::ENTERING:
         {
             auto it = std::find_if(ghosts.cbegin(), ghosts.cend(), [&entry](const Ghost &ghost)
                                    { return ghost.GetPersonality() == entry.first; });

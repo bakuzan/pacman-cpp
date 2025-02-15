@@ -28,9 +28,10 @@ void GhostAnimation::Update(GhostMode mode, Direction direction, float deltaTime
     {
         blinkTimeElapsed = 0.0f; // Ensure is 0 for next frightened run.
 
-        currentImage.x = mode != GhostMode::SPAWN
-                             ? columnIndex
-                             : 4;
+        bool isAlive = mode != GhostMode::SPAWN &&
+                       mode != GhostMode::ENTERING;
+
+        currentImage.x = isAlive ? columnIndex : 4;
 
         switch (direction)
         {

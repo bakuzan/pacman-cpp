@@ -23,12 +23,13 @@ sf::Vector2f GhostMovement::GetTargetTile(GhostPersonality personality, GhostMod
     case GhostMode::HOUSED:
         return GetHousedTargetTile(personality, ghosts);
     case GhostMode::LEAVING:
+    case GhostMode::SPAWN:
         return sf::Vector2f(Constants::FIRST_OUTSIDE_CELL_LHS);
     case GhostMode::SCATTER:
         return GetScatterTargetTile(personality, walls);
     case GhostMode::CHASE:
         return GetChaseTargetTile(personality, walls, ghosts, player, deltaTime);
-    case GhostMode::SPAWN:
+    case GhostMode::ENTERING:
         return GetSpawnTargetTile(personality, ghosts);
     case GhostMode::FRIGHTENED:
     default:
