@@ -1,4 +1,4 @@
-#include <SFML/Graphics.hpp>
+#include "pch.h"
 
 #include <algorithm>
 #include <chrono>
@@ -8,7 +8,6 @@
 #include <optional>
 #include <sstream>
 #include <thread>
-#include <vector>
 
 #include "include/Button.h"
 #include "include/Constants.h"

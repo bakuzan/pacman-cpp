@@ -1,5 +1,6 @@
+#include "pch.h"
+
 #include <cstdlib>
-#include <iostream>
 
 #include "include/CellType.h"
 #include "include/Constants.h"

@@ -1,4 +1,4 @@
-#include <SFML/Graphics.hpp>
+#include "pch.h"
 
 #include "include/CellType.h"
 #include "include/Collider.h"

@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "include/GhostAnimation.h"
 
 GhostAnimation::GhostAnimation(sf::Texture *texture, float blinkInterval, float columnIndex)

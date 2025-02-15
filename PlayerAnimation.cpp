@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "include/PlayerAnimation.h"
 #include "include/Direction.h"
 

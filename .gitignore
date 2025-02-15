@@ -2,3 +2,4 @@
 *.exe
 *.dll
 !dlls/*.dll
+*.gch

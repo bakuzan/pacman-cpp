@@ -1,6 +1,7 @@
+#include "pch.h"
+
 #include <algorithm>
 #include <cmath>
-#include <vector>
 
 #include "include/FloatUtils.h"
 

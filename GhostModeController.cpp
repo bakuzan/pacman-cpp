@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "include/Constants.h"
 #include "include/Ghost.h"
 #include "include/GhostModeController.h"

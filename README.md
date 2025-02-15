@@ -17,3 +17,7 @@ Most likely this will not be of use to anyone.
 - Enter `set PATH=<project_path>\dlls;%PATH%` to add the folder to your PATH for the session.
 - You can check it was added by running `for %i in ("%PATH:;=" "%") do @echo %i` to list the paths in the PATH
 - Run `<my_file>.exe` or whatever you were trying to run.
+
+### How do I make the pch.h.gch file?
+
+Run the following command in your project directory: `g++ -x c++-header -I"<your_path_to>/SFML/include" -o pch.h.gch pch.h`
