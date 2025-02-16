@@ -4,6 +4,7 @@
 #include <map>
 
 #include "GhostMode.h"
+#include "GhostPersonality.h"
 
 class Ghost;
 

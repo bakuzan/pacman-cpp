@@ -13,291 +13,18 @@
 #include "include/Constants.h"
 #include "include/CellType.h"
 #include "include/EnumUtils.h"
+#include "include/FileUtils.h"
 #include "include/Fruit.h"
+#include "include/GameInit.h"
+#include "include/GameState.h"
 #include "include/GameStatus.h"
 #include "include/Ghost.h"
 #include "include/Player.h"
 #include "include/PickUp.h"
+#include "include/RenderUtils.h"
 #include "include/SFMLUtils.h"
 #include "include/TextManager.h"
 #include "include/Wall.h"
-
-// Game State
-GameStatus gameStatus = GameStatus::MENU;
-
-float displayDuration = 3.0f;
-sf::Clock gameClock;
-
-float deltaTime = 0.0f;
-sf::Clock deltaClock;
-
-int score = 0;
-int lives = 3;
-int level = 1;
-
-std::vector<Wall> walls;
-std::vector<Ghost> ghosts;
-std::vector<PickUp> pickUps;
-std::vector<Fruit> fruits;
-std::vector<sf::Sprite> pacmanLives;
-
-// Game State END
-
-void writeToLogFile(const std::string &message)
-{
-    std::ofstream logFile("./logs/log.txt", std::ios_base::app);
-    logFile << message << std::endl;
-    logFile.close();
-}
-
-void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
-{
-    std::ifstream file("./resources/map.txt");
-    if (!file.is_open())
-    {
-        writeToLogFile("Error opening file ./resources/map.txt");
-        exit(EXIT_FAILURE);
-    }
-
-    int ghostColumnIndex = 0;
-    std::string line;
-    int lineIndex = 0;
-    while (getline(file, line))
-    {
-        std::stringstream ss(line);
-        std::string number;
-        int numberIndex = 0;
-
-        while (getline(ss, number, ','))
-        {
-            int cellContents = std::stoi(number);
-            float x = float(numberIndex);
-            float y = float(lineIndex) + Constants::GRID_OFFSET_Y;
-
-            switch (cellContents)
-            {
-            case CellType::WALL:
-            {
-                sf::RectangleShape wall;
-                wall.setSize(sf::Vector2f(0.6f, 0.6f));
-                wall.setOrigin(wall.getSize().x / 2.0f, wall.getSize().y / 2.0f);
-                wall.setFillColor(sf::Color::Transparent);
-                wall.setOutlineColor(Constants::WALL_COLOUR);
-                wall.setOutlineThickness(0.20f);
-                wall.setPosition(x, y);
-                walls.push_back({CellType::WALL, wall});
-                break;
-            }
-            case CellType::GHOST_DOOR:
-            {
-                sf::RectangleShape ghostDoor;
-                ghostDoor.setSize(sf::Vector2f(1.0f, 1.0f));
-                ghostDoor.setOrigin(ghostDoor.getSize().x / 2.0f, ghostDoor.getSize().y / 2.0f);
-                ghostDoor.setFillColor(sf::Color(100, 41, 71));
-                ghostDoor.setPosition(x, y);
-                walls.push_back({CellType::GHOST_DOOR, ghostDoor});
-                break;
-            }
-            case CellType::PELLET:
-            {
-                float size = 0.1;
-                sf::CircleShape cs(size);
-                cs.setOrigin(size, size);
-                cs.setFillColor(sf::Color(255, 229, 180));
-                cs.setPosition(x, y);
-                pickUps.push_back({CellType::PELLET, cs, true});
-                break;
-            }
-            case CellType::POWER_UP:
-            {
-                float size = 0.4;
-                sf::CircleShape cs(size);
-                cs.setOrigin(size, size);
-                cs.setFillColor(sf::Color(255, 229, 180));
-                cs.setPosition(x, y);
-                pickUps.push_back({CellType::POWER_UP, cs, true});
-                break;
-            }
-            case CellType::GHOST_START_POSITION:
-            {
-                Ghost gst(sharedTexture, Constants::SPRITE_SIZE, ghostColumnIndex++);
-                gst.SetSpawnPosition(x, y);
-                ghosts.push_back(gst);
-                break;
-            }
-            case CellType::PACMAN_START_POSITION:
-            {
-                player.SetSpawnPosition(x, y);
-                break;
-            }
-            case CellType::NOTHING:
-            default:
-                break;
-            }
-
-            numberIndex++;
-        }
-
-        lineIndex++;
-    }
-
-    // Close the file when done
-    file.close();
-}
-
-void PopulateFruit(sf::Texture &texture)
-{
-    fruits.push_back(Fruit(texture, Constants::SPRITE_SIZE, 30.0f));
-    fruits.push_back(Fruit(texture, Constants::SPRITE_SIZE, 70.0f));
-}
-
-void PopulatePacmanLives(sf::Texture &texture)
-{
-    for (int i = 0; i < 3; ++i)
-    {
-        sf::Sprite pacmanLife;
-        pacmanLife.setTexture(texture);
-        pacmanLife.setTextureRect(sf::IntRect(0, 0, 32, 32));
-        SFMLUtils::CenterOriginAndScale(pacmanLife, Constants::SPRITE_SIZE);
-        pacmanLives.push_back(pacmanLife);
-    }
-}
-
-void RefreshView(sf::RenderWindow &window, sf::View &view)
-{
-    window.clear(sf::Color(31, 31, 31));
-    window.setView(view);
-}
-
-void DrawMazeEnvironment(sf::RenderWindow &window, std::optional<sf::Color> colour = std::nullopt)
-{
-    bool setWallColour = colour.has_value();
-    for (auto &wall : walls)
-    {
-        if (setWallColour &&
-            wall.type == CellType::WALL)
-        {
-            wall.shape.setOutlineColor(colour.value());
-        }
-
-        window.draw(wall.shape);
-    }
-
-    for (auto &pu : pickUps)
-    {
-        if (pu.show)
-        {
-            window.draw(pu.shape);
-        }
-    }
-
-    for (auto &frt : fruits)
-    {
-        frt.Draw(window);
-    }
-}
-
-void DrawPacmanLives(sf::RenderWindow &window, int lives)
-{
-    float xOffset = 6.0f;
-    for (int i = 0; i < lives - 1; ++i)
-    {
-        sf::Sprite life = pacmanLives[i];
-        life.setPosition(xOffset + float(i), Constants::GRID_HEIGHT - 0.75f);
-        window.draw(life);
-    }
-}
-
-void DrawGhosts(sf::RenderWindow &window, std::optional<GhostPersonality> skipGhostPersonality = std::nullopt)
-{
-    for (auto &gst : ghosts)
-    {
-        if (!skipGhostPersonality.has_value() ||
-            gst.GetPersonality() != skipGhostPersonality.value())
-        {
-            gst.Draw(window);
-        }
-    }
-}
-
-void FlashWalls(sf::RenderWindow &window, sf::View &view, TextManager &textManager)
-{
-    float duration = 2.5f;
-    float interval = 0.25f;
-    float startTime = gameClock.getElapsedTime().asSeconds();
-
-    while (gameClock.getElapsedTime().asSeconds() - startTime < duration)
-    {
-        float elapsed = gameClock.getElapsedTime().asSeconds() - startTime;
-        sf::Color colour = (static_cast<int>(elapsed / interval) % 2 == 0)
-                               ? sf::Color::White
-                               : Constants::WALL_COLOUR;
-
-        RefreshView(window, view);
-        DrawMazeEnvironment(window, colour);
-        DrawPacmanLives(window, lives);
-        textManager.Draw(window, gameStatus, gameClock.getElapsedTime().asSeconds());
-        window.display();
-
-        sf::sleep(sf::milliseconds(50));
-    }
-}
-
-void HideFruits(TextManager &textManager)
-{
-    textManager.ForceClearFruitPoints();
-
-    for (auto &frt : fruits)
-    {
-        frt.Hide();
-    }
-}
-
-void InitialiseGame(Player &player, GhostModeController *ghostModeController, bool isNewGame = true)
-{
-    gameStatus = GameStatus::PRE_GAME;
-
-    gameClock.restart();
-    deltaClock.restart();
-    deltaTime = 0.0f;
-
-    if (isNewGame)
-    {
-        score = 0;
-        lives = 3;
-        level = 1;
-    }
-    else
-    {
-        level++;
-    }
-
-    player.Reset();
-    ghostModeController->Reset();
-
-    for (auto &gst : ghosts)
-    {
-        gst.Reset();
-    }
-
-    for (auto &pus : pickUps)
-    {
-        pus.show = true;
-    }
-
-    for (auto &frt : fruits)
-    {
-        frt.Reset(level);
-    }
-
-    for (auto &wall : walls)
-    {
-        if (wall.type == CellType::WALL)
-        {
-            wall.shape.setOutlineColor(Constants::WALL_COLOUR);
-        }
-    }
-}
 
 int main()
 {
@@ -310,7 +37,7 @@ int main()
     sf::Image spritesheet;
     if (!spritesheet.loadFromFile("./resources/spritesheet.png"))
     {
-        writeToLogFile("Error opening file ./resources/spritesheet.png");
+        WriteToLogFile("Error opening file ./resources/spritesheet.png");
         exit(EXIT_FAILURE);
     }
 
@@ -327,7 +54,7 @@ int main()
     sf::Font font;
     if (!font.loadFromFile("./resources/PressStart2P-Regular.ttf"))
     {
-        writeToLogFile("Error loading font");
+        WriteToLogFile("Error loading font");
         exit(EXIT_FAILURE);
     }
 
@@ -340,7 +67,7 @@ int main()
     ReadAndProcessMap(sharedTexture, player);
 
     // Get min/max x coordinate for the "teleport" tunnel
-    auto [minWall, maxWall] = std::minmax_element(walls.begin(), walls.end(),
+    auto [minWall, maxWall] = std::minmax_element(GameState::walls.begin(), GameState::walls.end(),
                                                   [](const Wall &a, const Wall &b)
                                                   {
                                                       return a.shape.getPosition().x < b.shape.getPosition().x;
@@ -364,11 +91,11 @@ int main()
     while (window.isOpen())
     {
         // Timing
-        deltaTime = deltaClock.restart().asSeconds();
+        GameState::deltaTime = GameState::deltaClock.restart().asSeconds();
         float fpsLimit = 1.0f / 20.0f; // Lock fps
-        if (deltaTime > fpsLimit)
+        if (GameState::deltaTime > fpsLimit)
         {
-            deltaTime = fpsLimit;
+            GameState::deltaTime = fpsLimit;
         }
 
         // Input
@@ -393,13 +120,13 @@ int main()
             {
                 if (evnt.key.code == sf::Keyboard::P)
                 {
-                    switch (gameStatus)
+                    switch (GameState::gameStatus)
                     {
                     case GameStatus::IN_GAME:
-                        gameStatus = GameStatus::PAUSED;
+                        GameState::gameStatus = GameStatus::PAUSED;
                         break;
                     case GameStatus::PAUSED:
-                        gameStatus = GameStatus::IN_GAME;
+                        GameState::gameStatus = GameStatus::IN_GAME;
                         break;
                     default:
                         break;
@@ -416,7 +143,7 @@ int main()
             quitButton.HandleEvent(evnt, mousePosView);
         }
 
-        if (gameStatus == GameStatus::MENU)
+        if (GameState::gameStatus == GameStatus::MENU)
         {
             RefreshView(window, view);
             textManager.DrawMenuTitle(window);
@@ -428,7 +155,7 @@ int main()
         }
         else
         {
-            if (!(gameStatus == GameStatus::GAME_OVER))
+            if (!(GameState::gameStatus == GameStatus::GAME_OVER))
             {
                 // Player Input
                 Direction newDirection = Direction::NONE;
@@ -454,19 +181,19 @@ int main()
                 }
 
                 // Logic
-                if (gameStatus == GameStatus::IN_GAME)
+                if (GameState::gameStatus == GameStatus::IN_GAME)
                 {
                     // Tick ghost modes
-                    ghostModeController->Update(deltaTime, ghosts);
+                    ghostModeController->Update(GameState::deltaTime, GameState::ghosts);
 
                     // Advance player
-                    player.Update(newDirection, deltaTime, walls, minX, maxX);
+                    player.Update(newDirection, GameState::deltaTime, GameState::walls, minX, maxX);
 
                     // Did we eat pellets?
                     sf::Vector2f playerPos = player.GetPosition();
                     int playerX = static_cast<int>(std::round(playerPos.x));
                     int playerY = static_cast<int>(std::round(playerPos.y));
-                    for (auto &pu : pickUps)
+                    for (auto &pu : GameState::pickUps)
                     {
                         auto puPos = pu.shape.getPosition();
                         if (playerX == puPos.x &&
@@ -478,17 +205,17 @@ int main()
                             if (pu.type == CellType::POWER_UP)
                             {
                                 ghostModeController->StartFrightened();
-                                score += 50;
+                                GameState::score += 50;
                             }
                             else
                             {
-                                score += 10;
+                                GameState::score += 10;
                             }
                         }
                     }
 
                     // Are all pellets eaten?
-                    bool allPelletsEaten = std::all_of(pickUps.cbegin(), pickUps.cend(),
+                    bool allPelletsEaten = std::all_of(GameState::pickUps.cbegin(), GameState::pickUps.cend(),
                                                        [](const auto &pu)
                                                        { return !pu.show; });
                     if (allPelletsEaten)
@@ -500,15 +227,15 @@ int main()
                     }
 
                     // Fruit - Do we need to spawn a fruit? Hide one? Eaten it?
-                    int totalPickups = pickUps.size();
-                    int countNotShowing = std::count_if(pickUps.cbegin(), pickUps.cend(),
+                    int totalPickups = GameState::pickUps.size();
+                    int countNotShowing = std::count_if(GameState::pickUps.cbegin(), GameState::pickUps.cend(),
                                                         [](const PickUp &pickup)
                                                         { return !pickup.show; });
 
                     double percentageNotShowing = (static_cast<double>(countNotShowing) / totalPickups) * 100;
-                    for (auto &frt : fruits)
+                    for (auto &frt : GameState::fruits)
                     {
-                        float currentSeconds = gameClock.getElapsedTime().asSeconds();
+                        float currentSeconds = GameState::gameClock.getElapsedTime().asSeconds();
                         if (frt.IsShown())
                         {
                             // Has Player eaten the fruit?
@@ -517,7 +244,7 @@ int main()
                                 playerY == frtPos.y)
                             {
                                 int fruitPoints = frt.GetPoints();
-                                score += fruitPoints;
+                                GameState::score += fruitPoints;
                                 textManager.QueueFruitPointsDisplay(currentSeconds, fruitPoints, frtPos);
                                 frt.Hide();
                             }
@@ -529,15 +256,15 @@ int main()
                         }
                         else if (percentageNotShowing > frt.GetDisplayThreshold())
                         {
-                            frt.Show(level, currentSeconds);
+                            frt.Show(GameState::level, currentSeconds);
                         }
                     }
 
                     // Advance ghosts
                     sf::FloatRect playerRect(playerPos, sf::Vector2f(Constants::SPRITE_SIZE, Constants::SPRITE_SIZE));
-                    for (auto &gst : ghosts)
+                    for (auto &gst : GameState::ghosts)
                     {
-                        gst.Update(deltaTime, walls, ghosts, player, minX, maxX);
+                        gst.Update(GameState::deltaTime, GameState::walls, GameState::ghosts, player, minX, maxX);
 
                         // Did the ghosts get pacman? Or did pacman get frightened ghosts?
                         sf::Vector2f ghostPos = gst.GetPosition();
@@ -560,12 +287,12 @@ int main()
                                 ghostModeController->Eaten(ghostPersonality);
                                 int frightenedGhosts = ghostModeController->GetFrightenedCount();
                                 int gstPoints = std::pow(2, (4 - frightenedGhosts)) * 100;
-                                score += gstPoints;
+                                GameState::score += gstPoints;
                                 // Pause and show points earn for ghost!
                                 RefreshView(window, view);
                                 DrawMazeEnvironment(window);
-                                DrawPacmanLives(window, lives);
-                                textManager.Draw(window, gameStatus, gameClock.getElapsedTime().asSeconds());
+                                DrawPacmanLives(window, GameState::lives);
+                                textManager.Draw(window, GameState::gameStatus, GameState::gameClock.getElapsedTime().asSeconds());
                                 DrawGhosts(window, ghostPersonality);
                                 textManager.DrawGhostScore(window, gstPoints, ghostPos);
                                 window.display();
@@ -576,8 +303,8 @@ int main()
                                 HideFruits(textManager);
                                 RefreshView(window, view);
                                 DrawMazeEnvironment(window);
-                                DrawPacmanLives(window, lives);
-                                textManager.Draw(window, gameStatus, gameClock.getElapsedTime().asSeconds());
+                                DrawPacmanLives(window, GameState::lives);
+                                textManager.Draw(window, GameState::gameStatus, GameState::gameClock.getElapsedTime().asSeconds());
                                 player.Draw(window);
                                 DrawGhosts(window);
                                 window.display();
@@ -590,41 +317,41 @@ int main()
 
                                     RefreshView(window, view);
                                     DrawMazeEnvironment(window);
-                                    DrawPacmanLives(window, lives);
-                                    textManager.Draw(window, gameStatus, gameClock.getElapsedTime().asSeconds());
+                                    DrawPacmanLives(window, GameState::lives);
+                                    textManager.Draw(window, GameState::gameStatus, GameState::gameClock.getElapsedTime().asSeconds());
                                     player.Draw(window);
                                     window.display();
 
                                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
                                 }
 
-                                lives--;
-                                if (lives == 0)
+                                GameState::lives--;
+                                if (GameState::lives == 0)
                                 {
-                                    gameStatus = GameStatus::GAME_OVER;
-                                    gameClock.restart();
+                                    GameState::gameStatus = GameStatus::GAME_OVER;
+                                    GameState::gameClock.restart();
                                 }
                                 else
                                 {
                                     player.Reset();
 
-                                    for (auto &gst : ghosts)
+                                    for (auto &gst : GameState::ghosts)
                                     {
                                         gst.Reset();
                                     }
 
-                                    gameStatus = GameStatus::PRE_GAME;
-                                    gameClock.restart();
+                                    GameState::gameStatus = GameStatus::PRE_GAME;
+                                    GameState::gameClock.restart();
                                 }
                             }
                         }
                     }
                 }
 
-                textManager.UpdateScoreText(score);
+                textManager.UpdateScoreText(GameState::score);
 
                 // if logic block caused game over, then no need to render for this loop
-                if (gameStatus == GameStatus::GAME_OVER)
+                if (GameState::gameStatus == GameStatus::GAME_OVER)
                 {
                     continue;
                 }
@@ -632,18 +359,18 @@ int main()
                 // Draw+Display
                 RefreshView(window, view);
                 DrawMazeEnvironment(window);
-                DrawPacmanLives(window, lives);
-                textManager.Draw(window, gameStatus, gameClock.getElapsedTime().asSeconds());
+                DrawPacmanLives(window, GameState::lives);
+                textManager.Draw(window, GameState::gameStatus, GameState::gameClock.getElapsedTime().asSeconds());
                 player.Draw(window);
                 DrawGhosts(window);
 
-                if (gameStatus == GameStatus::PRE_GAME)
+                if (GameState::gameStatus == GameStatus::PRE_GAME)
                 {
                     textManager.DrawPreGame(window);
 
-                    if (gameClock.getElapsedTime().asSeconds() >= displayDuration)
+                    if (GameState::gameClock.getElapsedTime().asSeconds() >= GameState::displayDuration)
                     {
-                        gameStatus = GameStatus::IN_GAME;
+                        GameState::gameStatus = GameStatus::IN_GAME;
                         player.SetDirection(Direction::LEFT);
                     }
                 }
@@ -652,13 +379,13 @@ int main()
             {
                 RefreshView(window, view);
                 DrawMazeEnvironment(window);
-                DrawPacmanLives(window, lives);
-                textManager.Draw(window, gameStatus, gameClock.getElapsedTime().asSeconds());
+                DrawPacmanLives(window, GameState::lives);
+                textManager.Draw(window, GameState::gameStatus, GameState::gameClock.getElapsedTime().asSeconds());
                 textManager.DrawGameOver(window);
 
-                if (gameClock.getElapsedTime().asSeconds() >= displayDuration)
+                if (GameState::gameClock.getElapsedTime().asSeconds() >= GameState::displayDuration)
                 {
-                    gameStatus = GameStatus::MENU;
+                    GameState::gameStatus = GameStatus::MENU;
                 }
             }
 
