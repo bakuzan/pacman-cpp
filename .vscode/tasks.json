@@ -25,6 +25,7 @@
         "${workspaceFolder}\\TextManager.cpp",
         "${workspaceFolder}\\SFMLUtils.cpp",
         "${workspaceFolder}\\Button.cpp",
+        "${workspaceFolder}\\Fruit.cpp",
         "-o",
         "${fileDirname}\\pacman.exe",
         "-LD:\\projects\\SFML\\lib",

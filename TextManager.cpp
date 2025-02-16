@@ -12,6 +12,8 @@ TextManager::TextManager(sf::Font &font) : font(font)
     readyText = GetReadyText();
     scoreLabelText = GetScoreLabelText();
     scoreText = GetScoreText();
+
+    ClearQueuedFruitPoints();
 }
 
 TextManager::~TextManager()
@@ -36,10 +38,22 @@ void TextManager::DrawPreGame(sf::RenderWindow &window)
     window.draw(readyText);
 }
 
-void TextManager::Draw(sf::RenderWindow &window, const GameStatus &gameStatus)
+void TextManager::Draw(sf::RenderWindow &window, const GameStatus &gameStatus, float currentSeconds)
 {
     window.draw(scoreLabelText);
     window.draw(scoreText);
+
+    if (fruitPointsStartTime != 0.0f)
+    {
+        if ((currentSeconds - fruitPointsStartTime) > 1.5f)
+        {
+            ClearQueuedFruitPoints();
+        }
+        else
+        {
+            window.draw(fruitPointsText);
+        }
+    }
 
     if (gameStatus == GameStatus::PAUSED)
     {
@@ -57,6 +71,17 @@ void TextManager::DrawGhostScore(sf::RenderWindow &window, int ghostPoints, cons
 {
     sf::Text pointsText = GetGhostPointsText(ghostPoints, ghostPosition);
     window.draw(pointsText);
+}
+
+void TextManager::QueueFruitPointsDisplay(float startTime, int fruitPoints, const sf::Vector2f &position)
+{
+    fruitPointsStartTime = startTime;
+    fruitPointsText = GetFruitPointsText(fruitPoints, position);
+}
+
+void TextManager::ForceClearFruitPoints()
+{
+    ClearQueuedFruitPoints();
 }
 
 // Private
@@ -133,6 +158,18 @@ sf::Text TextManager::GetGhostPointsText(int ghostPoints, const sf::Vector2f &po
     return pointsText;
 }
 
+sf::Text TextManager::GetFruitPointsText(int fruitPoints, const sf::Vector2f &position)
+{
+    sf::Text pointsText;
+    pointsText.setFont(font);
+    pointsText.setString(std::to_string(fruitPoints));
+    pointsText.setCharacterSize(18);
+    pointsText.setScale(1.0f / Constants::GRID_HEIGHT, 1.0f / Constants::GRID_HEIGHT);
+    pointsText.setFillColor(sf::Color::Magenta);
+    pointsText.setPosition(position.x - 0.5f, position.y - 0.25f);
+    return pointsText;
+}
+
 void TextManager::DisplayPauseSymbol(sf::RenderWindow &window)
 {
     float w = 2.0f;
@@ -169,4 +206,10 @@ std::string TextManager::Pad(std::string str, int width, char c)
     std::stringstream ss;
     ss << std::setw(width) << std::setfill(c) << str;
     return ss.str();
+}
+
+void TextManager::ClearQueuedFruitPoints()
+{
+    fruitPointsStartTime = 0.0f;
+    fruitPointsText = sf::Text();
 }

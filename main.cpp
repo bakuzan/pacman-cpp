@@ -13,6 +13,7 @@
 #include "include/Constants.h"
 #include "include/CellType.h"
 #include "include/EnumUtils.h"
+#include "include/Fruit.h"
 #include "include/GameStatus.h"
 #include "include/Ghost.h"
 #include "include/Player.h"
@@ -32,10 +33,12 @@ sf::Clock deltaClock;
 
 int score = 0;
 int lives = 3;
+int level = 1;
 
 std::vector<Wall> walls;
 std::vector<Ghost> ghosts;
 std::vector<PickUp> pickUps;
+std::vector<Fruit> fruits;
 std::vector<sf::Sprite> pacmanLives;
 
 // Game State END
@@ -142,6 +145,12 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
     file.close();
 }
 
+void PopulateFruit(sf::Texture &texture)
+{
+    fruits.push_back(Fruit(texture, Constants::SPRITE_SIZE, 30.0f));
+    fruits.push_back(Fruit(texture, Constants::SPRITE_SIZE, 70.0f));
+}
+
 void PopulatePacmanLives(sf::Texture &texture)
 {
     for (int i = 0; i < 3; ++i)
@@ -149,7 +158,7 @@ void PopulatePacmanLives(sf::Texture &texture)
         sf::Sprite pacmanLife;
         pacmanLife.setTexture(texture);
         pacmanLife.setTextureRect(sf::IntRect(0, 0, 32, 32));
-        SFMLUtils::CenterOriginAndScale(pacmanLife, 1.0f);
+        SFMLUtils::CenterOriginAndScale(pacmanLife, Constants::SPRITE_SIZE);
         pacmanLives.push_back(pacmanLife);
     }
 }
@@ -180,6 +189,11 @@ void DrawMazeEnvironment(sf::RenderWindow &window, std::optional<sf::Color> colo
         {
             window.draw(pu.shape);
         }
+    }
+
+    for (auto &frt : fruits)
+    {
+        frt.Draw(window);
     }
 }
 
@@ -222,10 +236,20 @@ void FlashWalls(sf::RenderWindow &window, sf::View &view, TextManager &textManag
         RefreshView(window, view);
         DrawMazeEnvironment(window, colour);
         DrawPacmanLives(window, lives);
-        textManager.Draw(window, gameStatus);
+        textManager.Draw(window, gameStatus, gameClock.getElapsedTime().asSeconds());
         window.display();
 
         sf::sleep(sf::milliseconds(50));
+    }
+}
+
+void HideFruits(TextManager &textManager)
+{
+    textManager.ForceClearFruitPoints();
+
+    for (auto &frt : fruits)
+    {
+        frt.Hide();
     }
 }
 
@@ -241,6 +265,11 @@ void InitialiseGame(Player &player, GhostModeController *ghostModeController, bo
     {
         score = 0;
         lives = 3;
+        level = 1;
+    }
+    else
+    {
+        level++;
     }
 
     player.Reset();
@@ -254,6 +283,11 @@ void InitialiseGame(Player &player, GhostModeController *ghostModeController, bo
     for (auto &pus : pickUps)
     {
         pus.show = true;
+    }
+
+    for (auto &frt : fruits)
+    {
+        frt.Reset(level);
     }
 
     for (auto &wall : walls)
@@ -286,6 +320,7 @@ int main()
 
     sf::Texture sharedTexture;
     sharedTexture.loadFromImage(spritesheet);
+    PopulateFruit(sharedTexture);
     PopulatePacmanLives(sharedTexture);
 
     // Load font for display text
@@ -458,9 +493,44 @@ int main()
                                                        { return !pu.show; });
                     if (allPelletsEaten)
                     {
+                        HideFruits(textManager);
                         FlashWalls(window, view, textManager);
                         InitialiseGame(player, ghostModeController, false);
                         continue;
+                    }
+
+                    // Fruit - Do we need to spawn a fruit? Hide one? Eaten it?
+                    int totalPickups = pickUps.size();
+                    int countNotShowing = std::count_if(pickUps.cbegin(), pickUps.cend(),
+                                                        [](const PickUp &pickup)
+                                                        { return !pickup.show; });
+
+                    double percentageNotShowing = (static_cast<double>(countNotShowing) / totalPickups) * 100;
+                    for (auto &frt : fruits)
+                    {
+                        float currentSeconds = gameClock.getElapsedTime().asSeconds();
+                        if (frt.IsShown())
+                        {
+                            // Has Player eaten the fruit?
+                            auto frtPos = frt.GetPosition();
+                            if (playerX == frtPos.x &&
+                                playerY == frtPos.y)
+                            {
+                                int fruitPoints = frt.GetPoints();
+                                score += fruitPoints;
+                                textManager.QueueFruitPointsDisplay(currentSeconds, fruitPoints, frtPos);
+                                frt.Hide();
+                            }
+
+                            if (currentSeconds - frt.GetDisplayTime() >= 9.0f)
+                            {
+                                frt.Hide();
+                            }
+                        }
+                        else if (percentageNotShowing > frt.GetDisplayThreshold())
+                        {
+                            frt.Show(level, currentSeconds);
+                        }
                     }
 
                     // Advance ghosts
@@ -495,7 +565,7 @@ int main()
                                 RefreshView(window, view);
                                 DrawMazeEnvironment(window);
                                 DrawPacmanLives(window, lives);
-                                textManager.Draw(window, gameStatus);
+                                textManager.Draw(window, gameStatus, gameClock.getElapsedTime().asSeconds());
                                 DrawGhosts(window, ghostPersonality);
                                 textManager.DrawGhostScore(window, gstPoints, ghostPos);
                                 window.display();
@@ -503,10 +573,11 @@ int main()
                             }
                             else if (ghostMode != GhostMode::SPAWN)
                             {
+                                HideFruits(textManager);
                                 RefreshView(window, view);
                                 DrawMazeEnvironment(window);
                                 DrawPacmanLives(window, lives);
-                                textManager.Draw(window, gameStatus);
+                                textManager.Draw(window, gameStatus, gameClock.getElapsedTime().asSeconds());
                                 player.Draw(window);
                                 DrawGhosts(window);
                                 window.display();
@@ -520,7 +591,7 @@ int main()
                                     RefreshView(window, view);
                                     DrawMazeEnvironment(window);
                                     DrawPacmanLives(window, lives);
-                                    textManager.Draw(window, gameStatus);
+                                    textManager.Draw(window, gameStatus, gameClock.getElapsedTime().asSeconds());
                                     player.Draw(window);
                                     window.display();
 
@@ -562,7 +633,7 @@ int main()
                 RefreshView(window, view);
                 DrawMazeEnvironment(window);
                 DrawPacmanLives(window, lives);
-                textManager.Draw(window, gameStatus);
+                textManager.Draw(window, gameStatus, gameClock.getElapsedTime().asSeconds());
                 player.Draw(window);
                 DrawGhosts(window);
 
@@ -582,7 +653,7 @@ int main()
                 RefreshView(window, view);
                 DrawMazeEnvironment(window);
                 DrawPacmanLives(window, lives);
-                textManager.Draw(window, gameStatus);
+                textManager.Draw(window, gameStatus, gameClock.getElapsedTime().asSeconds());
                 textManager.DrawGameOver(window);
 
                 if (gameClock.getElapsedTime().asSeconds() >= displayDuration)

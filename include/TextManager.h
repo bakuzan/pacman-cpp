@@ -15,10 +15,12 @@ public:
 
     void UpdateScoreText(int score);
     void DrawPreGame(sf::RenderWindow &window);
-    void Draw(sf::RenderWindow &window, const GameStatus &gameStatus);
+    void Draw(sf::RenderWindow &window, const GameStatus &gameStatus, float currentSeconds);
     void DrawGameOver(sf::RenderWindow &window);
 
     void DrawGhostScore(sf::RenderWindow &window, int ghostPoints, const sf::Vector2f &ghostPosition);
+    void QueueFruitPointsDisplay(float startTime, int fruitPoints, const sf::Vector2f &position);
+    void ForceClearFruitPoints();
 
 private:
     sf::Font &font;
@@ -27,6 +29,9 @@ private:
     sf::Text scoreLabelText;
     sf::Text scoreText;
 
+    float fruitPointsStartTime;
+    sf::Text fruitPointsText;
+
 private:
     sf::Text GetMenuTitle();
     sf::Text GetReadyText();
@@ -34,10 +39,12 @@ private:
     sf::Text GetScoreText();
     sf::Text GetGameOverText();
     sf::Text GetGhostPointsText(int ghostPoints, const sf::Vector2f &position);
+    sf::Text GetFruitPointsText(int fruitPoints, const sf::Vector2f &position);
     void DisplayPauseSymbol(sf::RenderWindow &window);
     void SetScale(sf::Text &text);
-
     std::string Pad(std::string str, int width, char c);
+
+    void ClearQueuedFruitPoints();
 };
 
 #endif // TEXTMANAGER_H

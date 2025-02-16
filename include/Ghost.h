@@ -32,7 +32,7 @@ public:
     void Reset();
 
 private:
-    sf::Texture texture;
+    sf::Texture &texture;
     sf::Sprite sprite;
     GhostAnimation animation;
 
