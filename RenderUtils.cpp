@@ -15,7 +15,8 @@ void DrawMazeEnvironment(sf::RenderWindow &window, std::optional<sf::Color> colo
     bool setWallColour = colour.has_value();
     for (auto &wall : GameState::walls)
     {
-        if (setWallColour && wall.type == CellType::WALL)
+        if (setWallColour &&
+            wall.type == CellType::WALL)
         {
             wall.shape.setOutlineColor(colour.value());
         }
@@ -51,7 +52,8 @@ void DrawGhosts(sf::RenderWindow &window, std::optional<GhostPersonality> skipGh
 {
     for (auto &gst : GameState::ghosts)
     {
-        if (!skipGhostPersonality.has_value() || gst.GetPersonality() != skipGhostPersonality.value())
+        if (!skipGhostPersonality.has_value() ||
+            gst.GetPersonality() != skipGhostPersonality.value())
         {
             gst.Draw(window);
         }
@@ -67,7 +69,9 @@ void FlashWalls(sf::RenderWindow &window, sf::View &view, TextManager &textManag
     while (GameState::gameClock.getElapsedTime().asSeconds() - startTime < duration)
     {
         float elapsed = GameState::gameClock.getElapsedTime().asSeconds() - startTime;
-        sf::Color colour = (static_cast<int>(elapsed / interval) % 2 == 0) ? sf::Color::White : Constants::WALL_COLOUR;
+        sf::Color colour = (static_cast<int>(elapsed / interval) % 2 == 0)
+                               ? sf::Color::White
+                               : Constants::WALL_COLOUR;
 
         RefreshView(window, view);
         DrawMazeEnvironment(window, colour);

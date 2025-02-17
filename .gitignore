@@ -3,3 +3,5 @@
 *.dll
 !dlls/*.dll
 *.gch
+
+*.map

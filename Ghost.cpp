@@ -82,6 +82,10 @@ void Ghost::Update(float deltaTime, const std::vector<Wall> &walls, const std::v
 
     float movementSpeed = GetMovementSpeed(currentMode, currentPosition, maxX);
     sf::Vector2f targetPosition = GhostMovement::GetTargetTile(personality, calcMode, walls, ghosts, player, deltaTime);
+
+    // TODO
+    // - only determine direction at intersections
+    // - at non intersections continue until a wall is hit, then make the only available turn
     Direction newDirection = justExitedTheHouse
                                  ? Direction::LEFT
                                  : DetermineDirection(deltaTime, walls, calcMode, movementSpeed, lastKnownDirection, sprite, targetPosition, forceReverseDirection, collisionOffset);
@@ -227,12 +231,26 @@ Direction Ghost::DetermineDirection(float deltaTime, const std::vector<Wall> &wa
     // if (personality == GhostPersonality::BLINKY &&
     //     lastKnownDirection != selectedDirection)
     // {
-    //     std::cout << "Change Direction !! "
-    //               << "previousDirection = "
+    //     std::cout << "Changed Direction! forcedReverse= "
+    //               << (forceReverseDirection
+    //                       ? "true"
+    //                       : "false")
+    //               << ", previousDirection= "
     //               << EnumUtils::DirectionToString(lastKnownDirection)
-    //               << ", selectedDirection = "
+    //               << ", selectedDirection= "
     //               << EnumUtils::DirectionToString(selectedDirection)
     //               << std::endl;
+
+    //     auto reverseDirection = Constants::REVERSE_DIRECTION_MAP.find(lastMovedDirection);
+    //     if (reverseDirection != Constants::REVERSE_DIRECTION_MAP.end() &&
+    //         selectedDirection == reverseDirection->second)
+    //     {
+    //         std::cout << "Direction Was Reversed! forcedReverse= "
+    //                   << (forceReverseDirection
+    //                           ? "true"
+    //                           : "false")
+    //                   << std::endl;
+    //     }
     // }
 
     return selectedDirection;
