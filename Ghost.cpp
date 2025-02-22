@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include <cstdlib>
+#include <stdexcept>
 
 #include "include/CellType.h"
 #include "include/Constants.h"
@@ -83,12 +84,48 @@ void Ghost::Update(float deltaTime, const std::vector<Wall> &walls, const std::v
     float movementSpeed = GetMovementSpeed(currentMode, currentPosition, maxX);
     sf::Vector2f targetPosition = GhostMovement::GetTargetTile(personality, calcMode, walls, ghosts, player, deltaTime);
 
-    // TODO
-    // - only determine direction at intersections
-    // - at non intersections continue until a wall is hit, then make the only available turn
-    Direction newDirection = justExitedTheHouse
-                                 ? Direction::LEFT
-                                 : DetermineDirection(deltaTime, walls, calcMode, movementSpeed, lastKnownDirection, sprite, targetPosition, forceReverseDirection, collisionOffset);
+    Direction newDirection;
+    if (justExitedTheHouse)
+    {
+        newDirection = Direction::LEFT;
+    }
+    else
+    {
+        std::vector<DirectionOption> directions = GetMoveableDirections(
+            deltaTime,
+            walls,
+            calcMode,
+            movementSpeed,
+            lastKnownDirection,
+            sprite,
+            forceReverseDirection);
+
+        if ((calcMode != GhostMode::SCATTER &&
+             calcMode != GhostMode::CHASE) ||
+            GhostMovement::IsAtIntersection(currentPosition))
+        {
+            if (personality == GhostPersonality::BLINKY)
+            {
+                std::cout << "Intersection! Moveable directions: "
+                          << std::to_string(directions.size())
+                          << std::endl;
+            }
+
+            newDirection = DetermineDirection(
+                calcMode,
+                sprite,
+                targetPosition,
+                directions,
+                forceReverseDirection,
+                collisionOffset);
+        }
+        else
+        {
+            auto moveableDirection = PickDirection(directions, lastKnownDirection);
+            newDirection = moveableDirection.direction;
+            collisionOffset = moveableDirection.offset;
+        }
+    }
 
     // Set position and offset for determined direction
     sf::Vector2f newPosition = currentPosition + GhostMovement::GetDirectionVector(newDirection, movementSpeed, deltaTime);
@@ -145,86 +182,43 @@ float Ghost::CalculateDistance(sf::Vector2f a, sf::Vector2f b)
     return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
 }
 
-Direction Ghost::DetermineDirection(float deltaTime, const std::vector<Wall> &walls, GhostMode mode, float movementSpeed, Direction lastMovedDirection, sf::Sprite ghost, sf::Vector2f targetPosition, bool forceReverseDirection, sf::Vector2f &collisionOffset)
+Direction Ghost::DetermineDirection(GhostMode mode, sf::Sprite ghost, sf::Vector2f targetPosition, const std::vector<DirectionOption> &validDirections, bool forceReverseDirection, sf::Vector2f &collisionOffset)
 {
-    // Possible directions
-    std::vector<DirectionOption> validDirectionsForFrightened;
-    std::vector<Direction> directions = {UP, LEFT, DOWN, RIGHT};
-    ExcludeDirections(mode, lastMovedDirection, forceReverseDirection, directions);
-
-    float epsilon = 1e-5;
     float minDistance = std::numeric_limits<float>::max();
-    Direction selectedDirection = lastMovedDirection;
     std::unordered_map<Direction, int> priorityMap = {{UP, 1}, {LEFT, 2}, {DOWN, 3}, {RIGHT, 4}};
 
+    Direction selectedDirection = Direction::NONE;
     sf::Vector2f currentPosition = ghost.getPosition();
-    sf::Vector2f localCollisionOffset;
 
-    std::vector<Wall> filteredWalls(walls);
-    if (mode == GhostMode::LEAVING ||
-        mode == GhostMode::ENTERING)
+    // Frightened ghosts: Select random direction from the valid options
+    if (mode == GhostMode::FRIGHTENED)
     {
-        filteredWalls.erase(std::remove_if(filteredWalls.begin(), filteredWalls.end(),
-                                           [](const Wall &wall)
-                                           {
-                                               return Ghost::IsGhostDoor(wall);
-                                           }),
-                            filteredWalls.end());
+        int randomIndex = std::rand() % validDirections.size();
+        DirectionOption option = validDirections[randomIndex];
+        selectedDirection = option.direction;
+        collisionOffset = option.offset;
     }
-
-    bool isFrightened = mode == GhostMode::FRIGHTENED;
-    for (Direction direction : directions)
+    else
     {
-        sf::Vector2f velocity = GhostMovement::GetDirectionVector(direction, movementSpeed, deltaTime);
-        sf::Vector2f nextPosition = currentPosition + velocity;
-        ghost.setPosition(nextPosition);
-
-        bool willCollide = Collider::CheckTileCollision(ghost, filteredWalls, localCollisionOffset);
-        if (willCollide && direction != lastMovedDirection)
+        for (auto &vd : validDirections)
         {
-            continue;
-        }
-        else if (willCollide && direction == lastMovedDirection)
-        {
-            sf::Vector2f diff = velocity - localCollisionOffset;
-            if (std::abs(diff.x) <= epsilon && std::abs(diff.y) <= epsilon)
-            {
-                continue;
-            }
-        }
-
-        if (!isFrightened)
-        {
-            float distance = CalculateDistance(nextPosition, targetPosition);
+            float distance = CalculateDistance(vd.position, targetPosition);
 
             if (distance < minDistance)
             {
                 minDistance = distance;
-                selectedDirection = direction;
-                collisionOffset = localCollisionOffset;
+                selectedDirection = vd.direction;
+                collisionOffset = vd.offset;
             }
             else if (distance == minDistance)
             {
-                if (priorityMap[direction] < priorityMap[selectedDirection])
+                if (priorityMap[vd.direction] < priorityMap[selectedDirection])
                 {
-                    selectedDirection = direction;
-                    collisionOffset = localCollisionOffset;
+                    selectedDirection = vd.direction;
+                    collisionOffset = vd.offset;
                 }
             }
         }
-        else
-        {
-            validDirectionsForFrightened.push_back({direction, localCollisionOffset});
-        }
-    }
-
-    // Frightened ghosts: Select random direction from the valid options
-    if (isFrightened)
-    {
-        int randomIndex = std::rand() % validDirectionsForFrightened.size();
-        DirectionOption option = validDirectionsForFrightened[randomIndex];
-        selectedDirection = option.direction;
-        collisionOffset = option.offset;
     }
 
     // TODO DEBUGGING REMOVE LATER
@@ -253,47 +247,71 @@ Direction Ghost::DetermineDirection(float deltaTime, const std::vector<Wall> &wa
     //     }
     // }
 
+    if (selectedDirection == Direction::NONE)
+    {
+        throw std::runtime_error("selectedDirection cannot be NONE");
+    }
+
     return selectedDirection;
 }
 
-void Ghost::ExcludeDirections(const GhostMode &mode, const Direction &lastMovedDirection, bool forceReverseDirection, std::vector<Direction> &directions)
+std::vector<DirectionOption> Ghost::GetMoveableDirections(float deltaTime, const std::vector<Wall> &walls, GhostMode mode, float movementSpeed, Direction lastMovedDirection, sf::Sprite ghost, bool forceReverseDirection)
 {
-    if (mode == GhostMode::HOUSED)
-    {
-        directions.erase(std::remove(directions.begin(), directions.end(), Direction::LEFT), directions.end());
-        directions.erase(std::remove(directions.begin(), directions.end(), Direction::RIGHT), directions.end());
-    }
-    else if (mode == GhostMode::LEAVING)
-    {
-        directions.erase(std::remove(directions.begin(), directions.end(), Direction::DOWN), directions.end());
-    }
-    else if (mode == GhostMode::ENTERING)
-    {
-        directions.erase(std::remove(directions.begin(), directions.end(), Direction::UP), directions.end());
-    }
-    else
-    {
-        // Exclude or Force reverse direction
-        auto reverseDirection = Constants::REVERSE_DIRECTION_MAP.find(lastMovedDirection);
+    float epsilon = 1e-5;
+    std::vector<Wall> filteredWalls = FilteredWalls(mode, walls);
+    Direction selectedDirection = lastMovedDirection;
+    sf::Vector2f currentPosition = ghost.getPosition();
+    sf::Vector2f localCollisionOffset;
 
-        directions.erase(std::remove_if(directions.begin(),
-                                        directions.end(),
-                                        [&reverseDirection, forceReverseDirection](Direction &direction)
-                                        {
-                                            if (forceReverseDirection)
-                                            {
-                                                return direction != reverseDirection->second;
-                                            }
+    std::vector<DirectionOption> validDirections;
+    std::vector<Direction> directions = GhostMovement::GetDirections(
+        mode,
+        lastKnownDirection,
+        currentPosition,
+        forceReverseDirection);
 
-                                            return direction == reverseDirection->second;
-                                        }),
-                         directions.end());
+    for (Direction direction : directions)
+    {
+        sf::Vector2f velocity = GhostMovement::GetDirectionVector(direction, movementSpeed, deltaTime);
+        sf::Vector2f nextPosition = currentPosition + velocity;
+        ghost.setPosition(nextPosition);
+
+        bool willCollide = Collider::CheckTileCollision(ghost, filteredWalls, localCollisionOffset);
+        if (willCollide && direction != lastMovedDirection)
+        {
+            continue;
+        }
+        else if (willCollide && direction == lastMovedDirection)
+        {
+            sf::Vector2f diff = velocity - localCollisionOffset;
+            if (std::abs(diff.x) <= epsilon && std::abs(diff.y) <= epsilon)
+            {
+                continue;
+            }
+        }
+
+        validDirections.push_back({direction, nextPosition, localCollisionOffset});
     }
+
+    return validDirections;
 }
 
-bool Ghost::IsGhostDoor(const Wall &wall)
+std::vector<Wall> Ghost::FilteredWalls(GhostMode mode, const std::vector<Wall> &walls)
 {
-    return wall.type == CellType::GHOST_DOOR;
+    std::vector<Wall> filteredWalls(walls);
+
+    if (mode == GhostMode::LEAVING ||
+        mode == GhostMode::ENTERING)
+    {
+        filteredWalls.erase(std::remove_if(filteredWalls.begin(), filteredWalls.end(),
+                                           [](const Wall &wall)
+                                           {
+                                               return wall.type == CellType::GHOST_DOOR;
+                                           }),
+                            filteredWalls.end());
+    }
+
+    return filteredWalls;
 }
 
 float Ghost::GetMovementSpeed(GhostMode mode, const sf::Vector2f &position, float maxX)
@@ -316,4 +334,18 @@ float Ghost::GetMovementSpeed(GhostMode mode, const sf::Vector2f &position, floa
     }
 
     return speed * multiplier;
+}
+
+DirectionOption Ghost::PickDirection(const std::vector<DirectionOption> &directions, Direction currentDirection)
+{
+    if (directions.size() == 1)
+    {
+        return directions.front();
+    }
+
+    return *std::find_if(directions.cbegin(), directions.cend(),
+                         [&currentDirection](const DirectionOption opt)
+                         {
+                             return opt.direction == currentDirection;
+                         });
 }

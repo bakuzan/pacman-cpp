@@ -23,6 +23,10 @@ public:
 
     static sf::Vector2f GetDirectionVector(Direction direction, float speed, float deltaTime);
 
+    static std::vector<Direction> GetDirections(GhostMode mode, Direction lastMovedDirection, const sf::Vector2f &position, bool forceReverseDirection);
+
+    static bool IsAtIntersection(const sf::Vector2f &position, float margin = 0.1f);
+
 private:
     static std::pair<float, float> GetMaxXY(const std::vector<Wall> &walls);
 

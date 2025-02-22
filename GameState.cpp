@@ -12,6 +12,7 @@ namespace GameState
     int score = 0;
     int lives = 3;
     int level = 1;
+    std::vector<sf::Vector2f> intersections;
     std::vector<Wall> walls;
     std::vector<Ghost> ghosts;
     std::vector<PickUp> pickUps;

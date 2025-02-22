@@ -2,6 +2,7 @@
 
 #include "include/Constants.h"
 #include "include/EnumUtils.h"
+#include "include/GameState.h"
 #include "include/Ghost.h"
 #include "include/GhostMovement.h"
 #include "include/Wall.h"
@@ -52,6 +53,73 @@ sf::Vector2f GhostMovement::GetDirectionVector(Direction direction, float speed,
     default:
         return sf::Vector2f(0, 0) * speed * deltaTime;
     }
+}
+
+std::vector<Direction> GhostMovement::GetDirections(GhostMode mode, Direction lastMovedDirection, const sf::Vector2f &position, bool forceReverseDirection)
+{
+    std::vector<Direction> directions = {UP, LEFT, DOWN, RIGHT};
+
+    if (mode == GhostMode::HOUSED)
+    {
+        directions.erase(std::remove(directions.begin(), directions.end(), Direction::LEFT), directions.end());
+        directions.erase(std::remove(directions.begin(), directions.end(), Direction::RIGHT), directions.end());
+    }
+    else if (mode == GhostMode::LEAVING)
+    {
+        directions.erase(std::remove(directions.begin(), directions.end(), Direction::DOWN), directions.end());
+    }
+    else if (mode == GhostMode::ENTERING)
+    {
+        directions.erase(std::remove(directions.begin(), directions.end(), Direction::UP), directions.end());
+    }
+    else
+    {
+        // Exclude or Force reverse direction
+        auto reverseDirection = Constants::REVERSE_DIRECTION_MAP.find(lastMovedDirection);
+
+        directions.erase(std::remove_if(directions.begin(),
+                                        directions.end(),
+                                        [&reverseDirection, forceReverseDirection](Direction &direction)
+                                        {
+                                            if (forceReverseDirection)
+                                            {
+                                                return direction != reverseDirection->second;
+                                            }
+
+                                            return direction == reverseDirection->second;
+                                        }),
+                         directions.end());
+
+        // Special intersections!
+        if (mode == GhostMode::SCATTER ||
+            mode == GhostMode::CHASE)
+        {
+            for (auto &intersection : Constants::NO_UP_INTERSECTIONS)
+            {
+                if (std::fabs(position.x - intersection.x) < 0.1f &&
+                    std::fabs(position.y - intersection.y) < 0.1f)
+                {
+                    directions.erase(std::remove(directions.begin(), directions.end(), Direction::UP), directions.end());
+                }
+            }
+        }
+    }
+
+    return directions;
+}
+
+bool GhostMovement::IsAtIntersection(const sf::Vector2f &position, float margin)
+{
+    for (const auto &intersection : GameState::intersections)
+    {
+        if (std::fabs(position.x - intersection.x) < margin &&
+            std::fabs(position.y - intersection.y) < margin)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 // Private

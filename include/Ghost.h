@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "Collider.h"
+#include "DirectionOption.h"
 #include "GhostAnimation.h"
 #include "GhostMode.h"
 #include "GhostPersonality.h"
@@ -47,11 +48,12 @@ private:
 
 private:
     float CalculateDistance(sf::Vector2f a, sf::Vector2f b);
-    Direction DetermineDirection(float deltaTime, const std::vector<Wall> &walls, GhostMode mode, float movementSpeed, Direction lastMovedDirection, sf::Sprite ghost, sf::Vector2f targetPosition, bool forceReverseDirection, sf::Vector2f &collisionOffset);
-    void ExcludeDirections(const GhostMode &mode, const Direction &lastMovedDirection, bool forceReverseDirection, std::vector<Direction> &directions);
-    float GetMovementSpeed(GhostMode mode, const sf::Vector2f &position, float maxX);
+    Direction DetermineDirection(GhostMode mode, sf::Sprite ghost, sf::Vector2f targetPosition, const std::vector<DirectionOption> &validDirections, bool forceReverseDirection, sf::Vector2f &collisionOffset);
+    std::vector<DirectionOption> GetMoveableDirections(float deltaTime, const std::vector<Wall> &walls, GhostMode mode, float movementSpeed, Direction lastMovedDirection, sf::Sprite ghost, bool forceReverseDirection);
 
-    static bool IsGhostDoor(const Wall &wall);
+    float GetMovementSpeed(GhostMode mode, const sf::Vector2f &position, float maxX);
+    std::vector<Wall> FilteredWalls(GhostMode mode, const std::vector<Wall> &walls);
+    DirectionOption PickDirection(const std::vector<DirectionOption> &directions, Direction currentDirection);
 };
 
 #endif // GHOST_H

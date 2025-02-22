@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 
@@ -24,6 +25,7 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
         exit(EXIT_FAILURE);
     }
 
+    std::vector<sf::Vector2f> walkableSpots;
     int ghostColumnIndex = 0;
     std::string line;
     int lineIndex = 0;
@@ -99,9 +101,46 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
             default:
                 break;
             }
+
+            // Gather list of walkables
+            switch (cellContents)
+            {
+            case CellType::WALL:
+            case CellType::GHOST_DOOR:
+                break;
+            default:
+            {
+                walkableSpots.push_back({x, y});
+                break;
+            }
+            }
+
             numberIndex++;
         }
+
         lineIndex++;
     }
     file.close();
+
+    // Build list of intersections
+    for (const auto &spot : walkableSpots)
+    {
+        int pathCount = 0;
+
+        // Check all four directions
+        if (std::find(walkableSpots.begin(), walkableSpots.end(), sf::Vector2f{spot.x - 1.0f, spot.y}) != walkableSpots.end())
+            pathCount++;
+        if (std::find(walkableSpots.begin(), walkableSpots.end(), sf::Vector2f{spot.x + 1.0f, spot.y}) != walkableSpots.end())
+            pathCount++;
+        if (std::find(walkableSpots.begin(), walkableSpots.end(), sf::Vector2f{spot.x, spot.y - 1.0f}) != walkableSpots.end())
+            pathCount++;
+        if (std::find(walkableSpots.begin(), walkableSpots.end(), sf::Vector2f{spot.x, spot.y + 1.0f}) != walkableSpots.end())
+            pathCount++;
+
+        // Intersection if more than 2 paths available
+        if (pathCount > 2)
+        {
+            GameState::intersections.push_back(spot);
+        }
+    }
 }

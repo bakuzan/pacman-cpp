@@ -20,6 +20,7 @@ namespace GameState
     extern int score;
     extern int lives;
     extern int level;
+    extern std::vector<sf::Vector2f> intersections;
     extern std::vector<Wall> walls;
     extern std::vector<Ghost> ghosts;
     extern std::vector<PickUp> pickUps;

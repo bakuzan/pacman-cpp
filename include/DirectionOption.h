@@ -7,5 +7,6 @@
 struct DirectionOption
 {
     Direction direction;
+    sf::Vector2f position;
     sf::Vector2f offset;
 };

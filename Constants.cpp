@@ -25,6 +25,13 @@ namespace Constants
         {LEFT, RIGHT},
         {RIGHT, LEFT}};
 
+    const std::vector<sf::Vector2f> NO_UP_INTERSECTIONS = {
+        sf::Vector2f(12, GRID_OFFSET_Y + 11),
+        sf::Vector2f(15, GRID_OFFSET_Y + 11),
+        sf::Vector2f(12, GRID_OFFSET_Y + 23),
+        sf::Vector2f(15, GRID_OFFSET_Y + 23),
+    };
+
     const float COLLISION_TOLERANCE = 0.09f; // 0.05f;
 
     const sf::Color WALL_COLOUR = sf::Color(33, 33, 222);

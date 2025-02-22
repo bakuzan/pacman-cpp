@@ -31,12 +31,12 @@
         "${workspaceFolder}\\RenderUtils.cpp",
         "${workspaceFolder}\\FileUtils.cpp",
         "-o",
-        "${fileDirname}\\pacman.exe",
+        "${workspaceFolder}\\pacman.exe",
         "-LD:\\projects\\SFML\\lib",
         "-lsfml-graphics",
         "-lsfml-window",
         "-lsfml-system",
-        "-Wl,-rpath,${fileDirname}/dlls"
+        "-Wl,-rpath,${workspaceFolder}/dlls"
       ],
       "options": {
         "cwd": "${fileDirname}"
