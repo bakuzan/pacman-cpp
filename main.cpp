@@ -136,11 +136,14 @@ int main()
             }
             }
 
-            sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-            sf::Vector2f mousePosView = window.mapPixelToCoords(mousePos);
+            if (GameState::gameStatus == GameStatus::MENU)
+            {
+                sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+                sf::Vector2f mousePosView = window.mapPixelToCoords(mousePos);
 
-            newGameButton.HandleEvent(evnt, mousePosView);
-            quitButton.HandleEvent(evnt, mousePosView);
+                newGameButton.HandleEvent(evnt, mousePosView);
+                quitButton.HandleEvent(evnt, mousePosView);
+            }
         }
 
         if (GameState::gameStatus == GameStatus::MENU)

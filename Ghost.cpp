@@ -70,6 +70,8 @@ void Ghost::Update(float deltaTime, const std::vector<Wall> &walls, const std::v
     bool forceReverseDirection = mode->CheckForcedReverseQueue(personality);
     bool justExitedTheHouse = lastKnownMode == GhostMode::LEAVING &&
                               currentModeIgnoringFright != GhostMode::LEAVING;
+    bool aboutToEnterTheHouse = lastKnownMode != GhostMode::ENTERING &&
+                                currentModeIgnoringFright == GhostMode::ENTERING;
 
     sf::Vector2f currentPosition = sprite.getPosition();
     sf::Vector2f collisionOffset;
@@ -87,7 +89,11 @@ void Ghost::Update(float deltaTime, const std::vector<Wall> &walls, const std::v
     Direction newDirection;
     if (justExitedTheHouse)
     {
-        newDirection = Direction::LEFT;
+        newDirection = Direction::LEFT; // After leaving the house, ghosts always go left first
+    }
+    else if (aboutToEnterTheHouse)
+    {
+        newDirection = Direction::DOWN; // Ghost needs to go into the house, so force down
     }
     else
     {
@@ -104,13 +110,6 @@ void Ghost::Update(float deltaTime, const std::vector<Wall> &walls, const std::v
              calcMode != GhostMode::CHASE) ||
             GhostMovement::IsAtIntersection(currentPosition))
         {
-            if (personality == GhostPersonality::BLINKY)
-            {
-                std::cout << "Intersection! Moveable directions: "
-                          << std::to_string(directions.size())
-                          << std::endl;
-            }
-
             newDirection = DetermineDirection(
                 calcMode,
                 sprite,
@@ -220,32 +219,6 @@ Direction Ghost::DetermineDirection(GhostMode mode, sf::Sprite ghost, sf::Vector
             }
         }
     }
-
-    // TODO DEBUGGING REMOVE LATER
-    // if (personality == GhostPersonality::BLINKY &&
-    //     lastKnownDirection != selectedDirection)
-    // {
-    //     std::cout << "Changed Direction! forcedReverse= "
-    //               << (forceReverseDirection
-    //                       ? "true"
-    //                       : "false")
-    //               << ", previousDirection= "
-    //               << EnumUtils::DirectionToString(lastKnownDirection)
-    //               << ", selectedDirection= "
-    //               << EnumUtils::DirectionToString(selectedDirection)
-    //               << std::endl;
-
-    //     auto reverseDirection = Constants::REVERSE_DIRECTION_MAP.find(lastMovedDirection);
-    //     if (reverseDirection != Constants::REVERSE_DIRECTION_MAP.end() &&
-    //         selectedDirection == reverseDirection->second)
-    //     {
-    //         std::cout << "Direction Was Reversed! forcedReverse= "
-    //                   << (forceReverseDirection
-    //                           ? "true"
-    //                           : "false")
-    //                   << std::endl;
-    //     }
-    // }
 
     if (selectedDirection == Direction::NONE)
     {

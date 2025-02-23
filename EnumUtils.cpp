@@ -39,6 +39,8 @@ namespace EnumUtils
             return "FRIGHTENED";
         case SPAWN:
             return "SPAWN";
+        case ENTERING:
+            return "ENTERING";
         default:
             return "UNKNOWN";
         }
