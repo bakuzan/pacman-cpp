@@ -9,7 +9,7 @@
 
 void RefreshView(sf::RenderWindow &window, sf::View &view);
 void DrawMazeEnvironment(sf::RenderWindow &window, std::optional<sf::Color> colour = std::nullopt);
-void DrawPacmanLives(sf::RenderWindow &window, int lives);
+void DrawFooterGameStatuses(sf::RenderWindow &window, int lives);
 void DrawGhosts(sf::RenderWindow &window, std::optional<GhostPersonality> skipGhostPersonality = std::nullopt);
 void FlashWalls(sf::RenderWindow &window, sf::View &view, TextManager &textManager);
 void HideFruits(TextManager &textManager);

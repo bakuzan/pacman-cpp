@@ -44,6 +44,7 @@ int main()
     // Set colour that will be treated as transparent!
     sf::Color transparentColor = spritesheet.getPixel(0, 0);
     spritesheet.createMaskFromColor(transparentColor);
+    SFMLUtils::SetWindowIcon(window, spritesheet);
 
     sf::Texture sharedTexture;
     sharedTexture.loadFromImage(spritesheet);
@@ -294,7 +295,7 @@ int main()
                                 // Pause and show points earn for ghost!
                                 RefreshView(window, view);
                                 DrawMazeEnvironment(window);
-                                DrawPacmanLives(window, GameState::lives);
+                                DrawFooterGameStatuses(window, GameState::lives);
                                 textManager.Draw(window, GameState::gameStatus, GameState::gameClock.getElapsedTime().asSeconds());
                                 DrawGhosts(window, ghostPersonality);
                                 textManager.DrawGhostScore(window, gstPoints, ghostPos);
@@ -306,7 +307,7 @@ int main()
                                 HideFruits(textManager);
                                 RefreshView(window, view);
                                 DrawMazeEnvironment(window);
-                                DrawPacmanLives(window, GameState::lives);
+                                DrawFooterGameStatuses(window, GameState::lives);
                                 textManager.Draw(window, GameState::gameStatus, GameState::gameClock.getElapsedTime().asSeconds());
                                 player.Draw(window);
                                 DrawGhosts(window);
@@ -320,7 +321,7 @@ int main()
 
                                     RefreshView(window, view);
                                     DrawMazeEnvironment(window);
-                                    DrawPacmanLives(window, GameState::lives);
+                                    DrawFooterGameStatuses(window, GameState::lives);
                                     textManager.Draw(window, GameState::gameStatus, GameState::gameClock.getElapsedTime().asSeconds());
                                     player.Draw(window);
                                     window.display();
@@ -362,7 +363,7 @@ int main()
                 // Draw+Display
                 RefreshView(window, view);
                 DrawMazeEnvironment(window);
-                DrawPacmanLives(window, GameState::lives);
+                DrawFooterGameStatuses(window, GameState::lives);
                 textManager.Draw(window, GameState::gameStatus, GameState::gameClock.getElapsedTime().asSeconds());
                 player.Draw(window);
                 DrawGhosts(window);
@@ -382,7 +383,7 @@ int main()
             {
                 RefreshView(window, view);
                 DrawMazeEnvironment(window);
-                DrawPacmanLives(window, GameState::lives);
+                DrawFooterGameStatuses(window, GameState::lives);
                 textManager.Draw(window, GameState::gameStatus, GameState::gameClock.getElapsedTime().asSeconds());
                 textManager.DrawGameOver(window);
 

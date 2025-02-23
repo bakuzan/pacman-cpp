@@ -37,7 +37,7 @@ void DrawMazeEnvironment(sf::RenderWindow &window, std::optional<sf::Color> colo
     }
 }
 
-void DrawPacmanLives(sf::RenderWindow &window, int lives)
+void DrawFooterGameStatuses(sf::RenderWindow &window, int lives)
 {
     float xOffset = 6.0f;
     for (int i = 0; i < lives - 1; ++i)
@@ -45,6 +45,11 @@ void DrawPacmanLives(sf::RenderWindow &window, int lives)
         sf::Sprite life = GameState::pacmanLives[i];
         life.setPosition(xOffset + float(i), Constants::GRID_HEIGHT - 0.75f);
         window.draw(life);
+    }
+
+    for (auto &fruit : GameState::fruits)
+    {
+        fruit.DrawStatusIcon(window);
     }
 }
 
@@ -75,7 +80,7 @@ void FlashWalls(sf::RenderWindow &window, sf::View &view, TextManager &textManag
 
         RefreshView(window, view);
         DrawMazeEnvironment(window, colour);
-        DrawPacmanLives(window, GameState::lives);
+        DrawFooterGameStatuses(window, GameState::lives);
         textManager.Draw(window, GameState::gameStatus, GameState::gameClock.getElapsedTime().asSeconds());
         window.display();
 

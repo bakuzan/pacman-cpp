@@ -5,10 +5,14 @@
 Fruit::Fruit(sf::Texture &sharedTexture, float spriteSize, float displayThreshold)
     : texture(sharedTexture), displayThreshold(displayThreshold), triggeredTime(0.0f), triggered(false), show(false), points(100)
 {
+    float xOffset = Constants::GRID_WIDTH - 6.0f - (displayThreshold > 50.0f ? 0.0f : 1.0f);
+    statusPosition = sf::Vector2f(xOffset, Constants::GRID_HEIGHT - 0.75f);
+    spawnPosition = sf::Vector2f(14.0f, Constants::GRID_OFFSET_Y + 17.0f);
+
     sprite.setTexture(sharedTexture);
     SetTextureRect(1);
     SFMLUtils::CenterOriginAndScale(sprite, spriteSize);
-    sprite.setPosition(14.0f, Constants::GRID_OFFSET_Y + 17.0f);
+    sprite.setPosition(statusPosition);
 
     SetPoints(1);
 }
@@ -50,6 +54,7 @@ void Fruit::Show(int level, float startTime)
         triggered = true;
         triggeredTime = startTime;
         show = true;
+        sprite.setPosition(spawnPosition);
         SetTextureRect(level);
         SetPoints(level);
     }
@@ -68,11 +73,20 @@ void Fruit::Draw(sf::RenderWindow &window)
     }
 }
 
+void Fruit::DrawStatusIcon(sf::RenderWindow &window)
+{
+    if (!triggered)
+    {
+        window.draw(sprite);
+    }
+}
+
 void Fruit::Reset(int level)
 {
     triggeredTime = 0.0f;
     triggered = false;
     show = false;
+    sprite.setPosition(statusPosition);
     SetTextureRect(level);
     SetPoints(level);
 }

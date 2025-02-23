@@ -5,6 +5,7 @@
 
 namespace SFMLUtils
 {
+    void SetWindowIcon(sf::RenderWindow &window, sf::Image spritesheet);
     void CenterOriginAndScale(sf::Sprite &sprite, float spriteSize);
 };
 

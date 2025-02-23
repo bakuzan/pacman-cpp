@@ -18,11 +18,16 @@ public:
     void Show(int level, float startTime);
     void Hide();
     void Draw(sf::RenderWindow &window);
+    void DrawStatusIcon(sf::RenderWindow &window);
     void Reset(int level = 1);
 
 private:
     sf::Texture &texture;
     sf::Sprite sprite;
+
+    sf::Vector2f spawnPosition;
+    sf::Vector2f statusPosition;
+
     float displayThreshold;
     float triggeredTime;
     bool triggered;
