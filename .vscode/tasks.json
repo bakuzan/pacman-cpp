@@ -33,6 +33,7 @@
         "-o",
         "${workspaceFolder}\\pacman.exe",
         "-LD:\\projects\\SFML\\lib",
+        "-lsfml-audio",
         "-lsfml-graphics",
         "-lsfml-window",
         "-lsfml-system",

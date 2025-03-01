@@ -1,6 +1,7 @@
 #ifndef GAMESTATE_H
 #define GAMESTATE_H
 
+#include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 #include <vector>
 
@@ -26,6 +27,19 @@ namespace GameState
     extern std::vector<PickUp> pickUps;
     extern std::vector<Fruit> fruits;
     extern std::vector<sf::Sprite> pacmanLives;
+    // Sounds
+    extern std::vector<sf::SoundBuffer> soundBuffers;
+
+    extern sf::Sound menuMusic;
+    extern sf::Sound introMusic;
+    extern sf::Sound backgroundMusic;
+    extern sf::Sound frightenedMusic;
+
+    extern sf::Sound pacmanMovingSound;
+    extern sf::Sound pacmanEatFruitSound;
+    extern sf::Sound pacmanEatGhostSound;
+    extern sf::Sound pacmanDyingSound;
+    extern sf::Sound ghostRetreatSound;
 }
 
 #endif // GAMESTATE_H

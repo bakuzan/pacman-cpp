@@ -68,6 +68,7 @@
     "stop_token": "cpp",
     "thread": "cpp",
     "functional": "cpp",
-    "csignal": "cpp"
+    "csignal": "cpp",
+    "set": "cpp"
   }
 }

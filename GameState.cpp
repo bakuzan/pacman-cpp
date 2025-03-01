@@ -18,4 +18,17 @@ namespace GameState
     std::vector<PickUp> pickUps;
     std::vector<Fruit> fruits;
     std::vector<sf::Sprite> pacmanLives;
+    // Sounds
+    std::vector<sf::SoundBuffer> soundBuffers;
+
+    sf::Sound menuMusic;
+    sf::Sound introMusic;
+    sf::Sound backgroundMusic;
+    sf::Sound frightenedMusic;
+
+    sf::Sound pacmanMovingSound;
+    sf::Sound pacmanEatFruitSound;
+    sf::Sound pacmanEatGhostSound;
+    sf::Sound pacmanDyingSound;
+    sf::Sound ghostRetreatSound;
 }

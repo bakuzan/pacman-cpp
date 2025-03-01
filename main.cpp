@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <SFML/Audio.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -66,6 +67,7 @@ int main()
 
     // Process map
     ReadAndProcessMap(sharedTexture, player);
+    LoadSoundFiles();
 
     // Get min/max x coordinate for the "teleport" tunnel
     auto [minWall, maxWall] = std::minmax_element(GameState::walls.begin(), GameState::walls.end(),
@@ -124,6 +126,7 @@ int main()
                     switch (GameState::gameStatus)
                     {
                     case GameStatus::IN_GAME:
+                        StopAllSounds();
                         GameState::gameStatus = GameStatus::PAUSED;
                         break;
                     case GameStatus::PAUSED:
@@ -132,6 +135,10 @@ int main()
                     default:
                         break;
                     }
+                }
+                else if (evnt.key.code == sf::Keyboard::N)
+                {
+                    InitialiseGame(player, ghostModeController);
                 }
                 break;
             }
@@ -149,6 +156,12 @@ int main()
 
         if (GameState::gameStatus == GameStatus::MENU)
         {
+            if (GameState::menuMusic.getStatus() != sf::SoundSource::Status::Playing)
+            {
+                StopAllSounds();
+                GameState::menuMusic.play();
+            }
+
             RefreshView(window, view);
             textManager.DrawMenuTitle(window);
             newGameButton.Draw(window);
@@ -189,9 +202,47 @@ int main()
                 {
                     // Tick ghost modes
                     ghostModeController->Update(GameState::deltaTime, GameState::ghosts);
+                    if (ghostModeController->GetFrightenedTimer() == 0.0f &&
+                        GameState::backgroundMusic.getStatus() != sf::SoundSource::Status::Playing &&
+                        GameState::ghostRetreatSound.getStatus() != sf::SoundSource::Playing)
+                    {
+                        GameState::frightenedMusic.stop();
+                        GameState::backgroundMusic.play();
+                    }
+                    else if (GameState::ghostRetreatSound.getStatus() == sf::SoundSource::Playing)
+                    {
+                        bool noGhostIsSpawnMode = std::all_of(
+                            GameState::ghosts.cbegin(),
+                            GameState::ghosts.cend(),
+                            [&ghostModeController](const auto &gst)
+                            { return ghostModeController->GetMode(gst.GetPersonality()) != GhostMode::SPAWN; });
+
+                        if (noGhostIsSpawnMode)
+                        {
+                            GameState::ghostRetreatSound.stop();
+                            if (ghostModeController->GetFrightenedTimer() == 0.0f)
+                            {
+                                GameState::backgroundMusic.play();
+                            }
+                            else
+                            {
+                                GameState::frightenedMusic.play();
+                            }
+                        }
+                    }
 
                     // Advance player
                     player.Update(newDirection, GameState::deltaTime, GameState::walls, minX, maxX);
+                    if (player.GetDirection() != Direction::NONE &&
+                        GameState::pacmanMovingSound.getStatus() != sf::SoundSource::Status::Playing)
+                    {
+                        GameState::pacmanMovingSound.play();
+                    }
+                    else if (player.GetDirection() == Direction::NONE &&
+                             GameState::pacmanMovingSound.getStatus() == sf::SoundSource::Status::Playing)
+                    {
+                        GameState::pacmanMovingSound.stop();
+                    }
 
                     // Did we eat pellets?
                     sf::Vector2f playerPos = player.GetPosition();
@@ -209,6 +260,8 @@ int main()
                             if (pu.type == CellType::POWER_UP)
                             {
                                 ghostModeController->StartFrightened();
+                                GameState::backgroundMusic.stop();
+                                GameState::frightenedMusic.play();
                                 GameState::score += 50;
                             }
                             else
@@ -224,6 +277,7 @@ int main()
                                                        { return !pu.show; });
                     if (allPelletsEaten)
                     {
+                        StopAllSounds();
                         HideFruits(textManager);
                         FlashWalls(window, view, textManager);
                         InitialiseGame(player, ghostModeController, false);
@@ -247,6 +301,7 @@ int main()
                             if (playerX == frtPos.x &&
                                 playerY == frtPos.y)
                             {
+                                GameState::pacmanEatFruitSound.play();
                                 int fruitPoints = frt.GetPoints();
                                 GameState::score += fruitPoints;
                                 textManager.QueueFruitPointsDisplay(currentSeconds, fruitPoints, frtPos);
@@ -300,7 +355,11 @@ int main()
                                 DrawGhosts(window, ghostPersonality);
                                 textManager.DrawGhostScore(window, gstPoints, ghostPos);
                                 window.display();
+
+                                StopAllSounds();
+                                GameState::pacmanEatGhostSound.play();
                                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+                                GameState::ghostRetreatSound.play();
                             }
                             else if (ghostMode != GhostMode::SPAWN)
                             {
@@ -314,6 +373,7 @@ int main()
                                 window.display();
                                 std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
+                                GameState::pacmanDyingSound.play();
                                 bool isDying = true;
                                 while (isDying)
                                 {
@@ -344,6 +404,7 @@ int main()
                                         gst.Reset();
                                     }
 
+                                    StopAllSounds();
                                     GameState::gameStatus = GameStatus::PRE_GAME;
                                     GameState::gameClock.restart();
                                 }
@@ -370,17 +431,25 @@ int main()
 
                 if (GameState::gameStatus == GameStatus::PRE_GAME)
                 {
+                    if (GameState::introMusic.getStatus() != sf::SoundSource::Status::Playing)
+                    {
+                        StopAllSounds();
+                        GameState::introMusic.play();
+                    }
+
                     textManager.DrawPreGame(window);
 
                     if (GameState::gameClock.getElapsedTime().asSeconds() >= GameState::displayDuration)
                     {
                         GameState::gameStatus = GameStatus::IN_GAME;
                         player.SetDirection(Direction::LEFT);
+                        GameState::introMusic.stop();
                     }
                 }
             }
             else
             {
+                StopAllSounds();
                 RefreshView(window, view);
                 DrawMazeEnvironment(window);
                 DrawFooterGameStatuses(window, GameState::lives);

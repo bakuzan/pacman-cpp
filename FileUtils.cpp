@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <SFML/Audio.hpp>
 
 #include <algorithm>
 #include <fstream>
@@ -8,6 +9,20 @@
 #include "include/Constants.h"
 #include "include/CellType.h"
 #include "include/GameState.h"
+#include "FileUtils.h"
+
+// Private Helpers
+
+void LoadSoundBuffer(sf::SoundBuffer &buffer, const std::string &fileName)
+{
+    if (!buffer.loadFromFile(fileName))
+    {
+        WriteToLogFile("Error loading file " + fileName);
+        exit(EXIT_FAILURE);
+    }
+}
+
+// Private Helpers END
 
 void WriteToLogFile(const std::string &message)
 {
@@ -143,4 +158,56 @@ void ReadAndProcessMap(sf::Texture &sharedTexture, Player &player)
             GameState::intersections.push_back(spot);
         }
     }
+}
+
+void LoadSoundFiles()
+{
+    GameState::soundBuffers.resize(9);
+
+    LoadSoundBuffer(GameState::soundBuffers[0], "./resources/paccutscene.wav");
+    GameState::menuMusic.setBuffer(GameState::soundBuffers[0]);
+
+    LoadSoundBuffer(GameState::soundBuffers[1], "./resources/pacstart.wav");
+    GameState::introMusic.setBuffer(GameState::soundBuffers[1]);
+
+    LoadSoundBuffer(GameState::soundBuffers[2], "./resources/pacghost1.wav");
+    GameState::backgroundMusic.setBuffer(GameState::soundBuffers[2]);
+    GameState::backgroundMusic.setLoop(true);
+
+    LoadSoundBuffer(GameState::soundBuffers[3], "./resources/pacghostblue.wav");
+    GameState::frightenedMusic.setBuffer(GameState::soundBuffers[3]);
+    GameState::frightenedMusic.setLoop(true);
+
+    // Reactive sounds
+    LoadSoundBuffer(GameState::soundBuffers[4], "./resources/pacdot1.wav");
+    GameState::pacmanMovingSound.setBuffer(GameState::soundBuffers[4]);
+    GameState::pacmanMovingSound.setLoop(true);
+
+    LoadSoundBuffer(GameState::soundBuffers[5], "./resources/pacfruit.wav");
+    GameState::pacmanEatFruitSound.setBuffer(GameState::soundBuffers[5]);
+
+    LoadSoundBuffer(GameState::soundBuffers[6], "./resources/pacghosteat.wav");
+    GameState::pacmanEatGhostSound.setBuffer(GameState::soundBuffers[6]);
+
+    LoadSoundBuffer(GameState::soundBuffers[7], "./resources/pacdie1.wav");
+    GameState::pacmanDyingSound.setBuffer(GameState::soundBuffers[7]);
+
+    LoadSoundBuffer(GameState::soundBuffers[8], "./resources/pacghostretreat.wav");
+    GameState::ghostRetreatSound.setBuffer(GameState::soundBuffers[8]);
+    GameState::ghostRetreatSound.setLoop(true);
+}
+
+void StopAllSounds()
+{
+    GameState::menuMusic.stop();
+    GameState::introMusic.stop();
+    GameState::backgroundMusic.stop();
+    GameState::frightenedMusic.stop();
+
+    // Reactive sounds
+    GameState::pacmanMovingSound.stop();
+    GameState::pacmanEatFruitSound.stop();
+    GameState::pacmanEatGhostSound.stop();
+    GameState::pacmanDyingSound.stop();
+    GameState::ghostRetreatSound.stop();
 }
