@@ -373,6 +373,7 @@ int main()
                                 window.display();
                                 std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
+                                StopAllSounds();
                                 GameState::pacmanDyingSound.play();
                                 bool isDying = true;
                                 while (isDying)
@@ -404,7 +405,6 @@ int main()
                                         gst.Reset();
                                     }
 
-                                    StopAllSounds();
                                     GameState::gameStatus = GameStatus::PRE_GAME;
                                     GameState::gameClock.restart();
                                 }
