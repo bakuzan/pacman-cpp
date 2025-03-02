@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "include/Constants.h"
+#include "include/GameState.h"
 #include "include/Ghost.h"
 #include "include/GhostModeController.h"
 #include "include/GhostPersonality.h"
@@ -34,13 +35,30 @@ GhostMode GhostModeController::GetModeIgnoringFrightened(GhostPersonality person
     auto oit = overrideModeMap.find(personality);
     if (oit != overrideModeMap.end())
     {
-        return oit->second;
+        GhostMode overrideMode = oit->second;
+        if (overrideMode == GhostMode::LEAVING)
+        {
+            // We want to stagger ghosts leaving the house
+            float gameSeconds = GameState::gameClock.getElapsedTime().asSeconds();
+
+            if ((personality == GhostPersonality::PINKY &&
+                 gameSeconds < (GameState::displayDuration + 1.0f)) ||
+                (personality == GhostPersonality::INKY &&
+                 gameSeconds < (GameState::displayDuration + 2.0f)) ||
+                (personality == GhostPersonality::CLYDE &&
+                 gameSeconds < (GameState::displayDuration + 3.0f)))
+            {
+                overrideMode = GhostMode::HOUSED;
+            }
+        }
+
+        return overrideMode;
     }
 
     return mode;
 }
 
-void GhostModeController::Update(float deltaTime, const std::vector<Ghost> &ghosts)
+void GhostModeController::Update(float deltaTime, float gameTime, double percentagePelletsEaten, const std::vector<Ghost> &ghosts)
 {
     // Manage global mode
     if (frightenedTimeLimit == 0)
@@ -78,11 +96,26 @@ void GhostModeController::Update(float deltaTime, const std::vector<Ghost> &ghos
         {
         case GhostMode::HOUSED:
         {
-            // TODO Check if can now leave the house; do below if can
-            // if (canLeaveHouse)
-            // {
-            //     overrideModeMap[entry.first] = GhostMode::LEAVING;
-            // }
+            bool canLeaveHouse = false;
+            switch (entry.first)
+            {
+            case GhostPersonality::PINKY:
+                canLeaveHouse = gameTime >= (GameState::displayDuration + 3.5f);
+                break;
+            case GhostPersonality::INKY:
+                canLeaveHouse = percentagePelletsEaten >= 12.5;
+                break;
+            case GhostPersonality::CLYDE:
+                canLeaveHouse = percentagePelletsEaten >= 25.0;
+                break;
+            default:
+                break;
+            }
+
+            if (canLeaveHouse)
+            {
+                overrideModeMap[entry.first] = GhostMode::LEAVING;
+            }
             break;
         }
         case GhostMode::LEAVING:

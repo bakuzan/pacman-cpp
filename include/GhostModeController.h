@@ -20,7 +20,7 @@ public:
     bool CheckForcedReverseQueue(GhostPersonality personality);
     void StartFrightened();
     void Eaten(GhostPersonality personality);
-    void Update(float deltaTime, const std::vector<Ghost> &ghosts);
+    void Update(float deltaTime, float gameTime, double percentagePelletsEaten, const std::vector<Ghost> &ghosts);
     void ResetToHouse(GhostPersonality personality);
     void Reset();
 

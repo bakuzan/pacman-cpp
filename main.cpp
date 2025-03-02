@@ -200,8 +200,20 @@ int main()
                 // Logic
                 if (GameState::gameStatus == GameStatus::IN_GAME)
                 {
+                    int totalPickups = GameState::pickUps.size();
+                    int countNotShowing = std::count_if(GameState::pickUps.cbegin(),
+                                                        GameState::pickUps.cend(),
+                                                        [](const PickUp &pickup)
+                                                        { return !pickup.show; });
+
+                    double percentageNotShowing = (static_cast<double>(countNotShowing) / totalPickups) * 100;
+
                     // Tick ghost modes
-                    ghostModeController->Update(GameState::deltaTime, GameState::ghosts);
+                    ghostModeController->Update(GameState::deltaTime,
+                                                GameState::gameClock.getElapsedTime().asSeconds(),
+                                                percentageNotShowing,
+                                                GameState::ghosts);
+
                     if (ghostModeController->GetFrightenedTimer() == 0.0f &&
                         GameState::backgroundMusic.getStatus() != sf::SoundSource::Status::Playing &&
                         GameState::ghostRetreatSound.getStatus() != sf::SoundSource::Playing)
@@ -272,7 +284,8 @@ int main()
                     }
 
                     // Are all pellets eaten?
-                    bool allPelletsEaten = std::all_of(GameState::pickUps.cbegin(), GameState::pickUps.cend(),
+                    bool allPelletsEaten = std::all_of(GameState::pickUps.cbegin(),
+                                                       GameState::pickUps.cend(),
                                                        [](const auto &pu)
                                                        { return !pu.show; });
                     if (allPelletsEaten)
@@ -285,12 +298,6 @@ int main()
                     }
 
                     // Fruit - Do we need to spawn a fruit? Hide one? Eaten it?
-                    int totalPickups = GameState::pickUps.size();
-                    int countNotShowing = std::count_if(GameState::pickUps.cbegin(), GameState::pickUps.cend(),
-                                                        [](const PickUp &pickup)
-                                                        { return !pickup.show; });
-
-                    double percentageNotShowing = (static_cast<double>(countNotShowing) / totalPickups) * 100;
                     for (auto &frt : GameState::fruits)
                     {
                         float currentSeconds = GameState::gameClock.getElapsedTime().asSeconds();

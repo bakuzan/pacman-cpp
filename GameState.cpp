@@ -5,7 +5,7 @@
 namespace GameState
 {
     GameStatus gameStatus = GameStatus::MENU;
-    float displayDuration = 3.0f;
+    float displayDuration = 4.0f;
     sf::Clock gameClock;
     float deltaTime = 0.0f;
     sf::Clock deltaClock;
