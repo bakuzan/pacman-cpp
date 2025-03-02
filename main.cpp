@@ -368,7 +368,8 @@ int main()
                                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
                                 GameState::ghostRetreatSound.play();
                             }
-                            else if (ghostMode != GhostMode::SPAWN)
+                            else if (ghostMode != GhostMode::SPAWN &&
+                                     ghostMode != GhostMode::ENTERING)
                             {
                                 HideFruits(textManager);
                                 RefreshView(window, view);
